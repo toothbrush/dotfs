@@ -84,7 +84,7 @@ getStats entrytype uri = do
         , statFileGroup = fileGroup status
         , statSpecialDeviceID = specialDeviceID status
         , statFileSize  = fileSize status
-        , statBlocks    = 1            -- This is WRONG.  Change
+        , statBlocks    = 1            -- This is WRONG.  TODO
         , statAccessTime= accessTime status
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
@@ -130,8 +130,14 @@ funionLookUp dirsToUnion path = do
         else     do existsinConf <- confdir `fileExists` path
                     if existsinConf then do
                                             stats <- confdir `getFileStats` path
+                                            -- restrict conf file permissions.
+                                            let oldFileStat = funionFileStat stats
+                                                -- TODO set owner to current user
+                                                newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
+                                                stats'   = stats {funionFileStat = newFileStat}
+
                                             debug $ path ++  "file in conf."
-                                            return $ Just $ stats
+                                            return $ Just $ stats'
                     else do
                           dirinHome <- homedir `dirExists` path
                           if dirinHome then
