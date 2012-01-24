@@ -195,15 +195,13 @@ funionFSOps dir =
                  , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  , fuseOpenDirectory      = funionOpenDirectory dir
                  , fuseReadDirectory      = funionReadDirectory dir
-              --   , fuseRead               = funionRead dir
+                 , fuseRead               = funionRead dir
                  , fuseFlush              = funionFlush dir
-               --  , fuseOpen               = funionOpen dir
+                 , fuseOpen               = funionOpen dir
                  }
 {-
-  defaultFuseOps{
         -----   , fuseWrite              = funionWrite dir
                 , fuseAccess             = funionAccess dir
-                }
                 -}
 
 
@@ -221,16 +219,22 @@ funionAccess dirsToUnion (_:path)  code = do
 
 
 
-{-
-funionOpen :: [FilePath] -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
-funionOpen dirsToUnion (_:path) mode flags = do
-  file <- funionLookUp dirsToUnion path
+funionOpen :: DirPair -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
+funionOpen dirs (_:path) ReadOnly flags = do
+  file <- funionLookUp dirs path
   case file of
-    Just f -> do
-      fd <- openFd (funionActualPath f) mode Nothing defaultFileFlags
+    Just (f,_) -> do
+      fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
--}
+funionOpen dirs (_:path) mode flags = do
+  file <- funionLookUp dirs path
+  case file of
+    Just (f,Home) -> do
+      fd <- openFd (funionActualPath f) mode Nothing defaultFileFlags
+      return (Right fd)
+    Just (f,Conf)  -> return (Left eACCES)
+    Nothing -> return (Left eNOENT)
 
 -- What if 'fd' is no good?  What will happen?
 funionFlush :: DirPair -> FilePath -> Fd -> IO Errno
@@ -271,14 +275,12 @@ funionReadDirectory dirs (_:dir) = do
         return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
 
 
-{-
-funionRead  :: [FilePath] -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
+funionRead  :: DirPair -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
-  (Just file) <- funionLookUp dirsToUnion path
+  --(Just file) <- funionLookUp dirsToUnion path
   fdSeek fd AbsoluteSeek offset
   (bytes, num) <- fdRead fd  byteCount
   return $ Right $ pack bytes
--}
 
 
 {-
