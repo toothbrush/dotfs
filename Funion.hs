@@ -26,7 +26,7 @@ For now, I suppose that I could just specify the directories that I want to unio
 What about making this more aggressive and having some way of specifying unioning rules?  Perhaps
 via a DSL?
 
-How should I present SymLinks?  
+How should I present SymLinks?
 -}
 
 {- TODO(nathan)
@@ -218,9 +218,9 @@ defaultOptions = Options { optLog = undefined }
 
 
 options :: [OptDescr (Options -> IO Options)]
-options =  
+options =
   [ Option "V?" ["version"] (NoArg printVersion) "show version number"
-  , Option "l"  ["log"] (ReqArg (\ arg opt -> return opt {optLog = arg}) 
+  , Option "l"  ["log"] (ReqArg (\ arg opt -> return opt {optLog = arg})
                           "FILE") "write log to FILE"
   , Option "h"  ["help"] (NoArg printHelp) "show help message"
   ]
@@ -240,8 +240,8 @@ printVersion _ = do
 
 
 validateDirs :: [String] -> IO (String, [String])
-validateDirs dirs 
-  | length dirs >= 3 = return (head dirs, tail dirs) 
+validateDirs dirs
+  | length dirs >= 3 = return (head dirs, tail dirs)
   | otherwise        = do hPutStrLn stderr "Wrong number of arguments"; exitWith $ ExitFailure 1
 
 
@@ -252,6 +252,6 @@ main = do
 
   -- Currently ignoring.  Need to thread logging throughout
   opts <- foldl (>>=) (return defaultOptions) actions
-  
-  (mp, dirs) <- validateDirs dirList 
+
+  (mp, dirs) <- validateDirs dirList
   withArgs (mp:fuseargs) $ fuseMain (funionFSOps dirs) defaultExceptionHandler
