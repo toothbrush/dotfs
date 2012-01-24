@@ -1,3 +1,5 @@
+{-# LANGUAGE StandaloneDeriving #-}
+
 module Main where
 
 import qualified Data.ByteString.Char8 as B
@@ -14,7 +16,7 @@ import System(getArgs)
 import System.Environment(withArgs)
 import Control.Monad
 import Data.Maybe
-import Data.List (nubBy)
+import Data.List (nub)
 import Data.ByteString.Char8 (pack,unpack)
 import System.Console.GetOpt
 
@@ -48,6 +50,9 @@ data FunionFS = FunionFS {
   , funionContents      :: [FunionFS]
   }
  deriving Show
+
+instance Eq FunionFS where
+  (==) x y = funionEntryName x == funionEntryName y
 
 data Conf = C FilePath deriving Show
 data Home = H FilePath deriving Show
@@ -97,8 +102,9 @@ getStats entrytype uri = do
   }
 
 
-readDir :: FilePath -> IO (FunionFS)
-readDir uri = do
+readDir :: FilePath -> FilePath -> IO (FunionFS)
+readDir dir file = do
+  let uri = dir </> file
   debug $ "reading dir: " ++ uri
   contents <- dirContents uri
   files    <- filterM (fileExists uri) contents
@@ -109,8 +115,8 @@ readDir uri = do
 
   return FunionFS {
       funionEntryName   = takeFileName uri
-    , funionActualPath  = ""
-    , funionVirtualPath = uri
+    , funionActualPath  = uri
+    , funionVirtualPath = uri -- TODO: this isn't even true
     , funionFileStat    = dirStat --TODO do properly.
     , funionContents    = fileList ++ dirList
   }
@@ -120,8 +126,19 @@ funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
                                    -- on the root of the unionFS. Therefore,
                                    -- return the root of home. Makes more sense.
         let (H homedir) = home dirsToUnion
+            (C confdir) = conf dirsToUnion
         homeVersion <- statIfExists homedir ""
-        return homeVersion
+        confVersion <- statIfExists confdir ""
+        case homeVersion of
+          Nothing -> return Nothing
+          Just hV -> do
+            let homeContents = funionContents hV
+            case confVersion of
+                Nothing -> return (Just hV)
+                Just cV -> do
+                    let confContents = funionContents cV
+                        finalContents = nub $ homeContents ++ confContents
+                    return $ Just $ hV { funionContents = finalContents }
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
@@ -143,10 +160,11 @@ statIfExists dir file = do
                           existsAsDir <- dir `dirExists` file
                           if existsAsDir then
                                       do debug $ file ++ " is a dir in "++dir
-                                         asdf <- readDir.(</> file) $ dir
+                                         asdf <- readDir dir file
                                          let contents = funionContents asdf
                                          stats <- dir `getDirStats` file
-                                         return $ Just $ stats
+                                         let stats' = stats {funionContents = contents}
+                                         return $ Just $ stats'
                           else        do existsAsFile <- dir `fileExists` file
                                          if existsAsFile then do
                                                        debug $ file ++ " is a file in " ++ dir
@@ -163,16 +181,14 @@ funionFSOps dir =
                    fuseGetFileStat        = funionGetFileStat dir
                  , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  , fuseOpenDirectory      = funionOpenDirectory dir
+                 , fuseReadDirectory      = funionReadDirectory dir
                  }
 {-
   defaultFuseOps{
-                , fuseReadDirectory      = funionReadDirectory dir
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
                 , fuseRead               = funionRead dir
                 , fuseWrite              = funionWrite dir
-                , fuseOpenDirectory      = funionOpenDirectory dir
-                , fuseReadDirectory      = funionReadDirectory dir
                 , fuseAccess             = funionAccess dir
                 }
                 -}
@@ -233,14 +249,12 @@ funionGetFileSystemStats dp str = -- use stats from home dp
     }
 
 
-{-
-funionReadDirectory :: [FilePath] ->FilePath -> IO (Either Errno [(FilePath, FileStat)])
-funionReadDirectory dirsToUnion (_:dir) = do
-  entry <- funionLookUp dirsToUnion dir
+funionReadDirectory :: DirPair -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
+funionReadDirectory dirs (_:dir) = do
+  entry <- funionLookUp dirs dir
   let contents = funionContents $ fromJust entry
   let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
   return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
--}
 
 
 {-
@@ -253,12 +267,14 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
 -}
 
 
+{-
 funionWrite :: DirPair -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
 funionWrite dirsToUnion (_:path) fd content offset = do
   (Just file) <- funionLookUp dirsToUnion path
   fdSeek fd AbsoluteSeek offset
   bytes <- fdWrite fd (unpack content)
   return $ Right $ bytes
+  -}
 
 -- TODO: real directory stat, not this fake info.
 -- why was this even necessary?
