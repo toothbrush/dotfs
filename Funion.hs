@@ -199,7 +199,6 @@ funionFSOps dir =
                  }
 {-
         -----   , fuseWrite              = funionWrite dir
-                , fuseAccess             = funionAccess dir
                 -}
 
 
@@ -209,11 +208,6 @@ funionGetFileStat dp (_:dir) = do
   case lookup of
     Just (file,_) -> return $ Right $ funionFileStat file
     Nothing       -> return $ Left eNOENT
-{-
-funionAccess :: [FilePath] -> FilePath -> Int -> IO Errno
-funionAccess dirsToUnion (_:path)  code = do
-  return eOK
-  -}
 
 
 
