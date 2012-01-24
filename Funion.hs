@@ -1,23 +1,26 @@
 module Main where
 
+import Util.Options
+import Util.Sanity
+import Core.Datatypes
+import Core.Constants
+
 import qualified Data.ByteString.Char8 as B
 import System.Posix.Types
 import System.Posix.Files
 import System.FilePath.Posix
 import System.Posix.IO
 import System.Directory
-import System.Environment
+import System.Console.GetOpt
 import System.Exit
-import System.Fuse
+import System.Environment
 import System.IO
+import System.Fuse
 import System(getArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nub)
 import Data.ByteString.Char8 (pack,unpack)
-import System.Console.GetOpt
-
-version = "0.0.2"
 
 {-
  - TODO: we can fill in actualPath now. do we want to though?
@@ -39,27 +42,6 @@ How should I present SymLinks?
 * need to add unit tests
 -}
 
-data FunionFS = FunionFS {
-    funionEntryName     :: FilePath
-  , funionActualPath    :: FilePath
-  , funionVirtualPath   :: FilePath
-  , funionFileStat      :: FileStat
-  , funionContents      :: [FunionFS]
-  }
- deriving Show
-
-instance Eq FunionFS where
-  (==) x y = funionEntryName x == funionEntryName y
-
-data Version = Conf
-             | Home deriving Show
-
-data Conf = C FilePath deriving Show
-data Home = H FilePath deriving Show
-data DirPair = DP { home :: Home
-                  , conf :: Conf
-                  }
-                 deriving (Show)
 
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
@@ -117,8 +99,6 @@ readDir dir file = do
   -- list of directories
   dirs     <- filterM (dirExists uri) contents
   dirList  <- mapM (getDirStats uri) dirs
-
-  file <- funionLookup 
 
   return FunionFS {
       funionEntryName   = takeFileName uri
@@ -249,19 +229,6 @@ funionOpenDirectory dirs (_:path) = do
   return $ if length extantDirs > 0 then eOK else eNOENT
 
 
--- TODO: there must be a system call for this.
-funionGetFileSystemStats :: DirPair -> String -> IO (Either Errno FileSystemStats)
-funionGetFileSystemStats dp str = -- use stats from home dp
-  return $ Right FileSystemStats
-    { fsStatBlockSize  = 512
-    , fsStatBlockCount = 1000
-    , fsStatBlocksFree = 1000
-    , fsStatBlocksAvailable = 1000
-    , fsStatFileCount  = 5      -- IS THIS CORRECT?
-    , fsStatFilesFree  = 10     -- WHAT IS THIS?
-    , fsStatMaxNameLength = 255 -- SEEMS SMALL?
-    }
-
 
 funionReadDirectory :: DirPair -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
 funionReadDirectory dirs (_:dir) = do
@@ -291,84 +258,9 @@ funionWrite dirsToUnion (_:path) fd content offset = do
   return $ Right $ bytes
   -}
 
--- TODO: real directory stat, not this fake info.
--- why was this even necessary?
-dirStat = FileStat {
-    statEntryType = Directory
-  , statFileMode = foldr1 unionFileModes
-                     [ ownerReadMode
-                 --    , ownerWriteMode
-                     , ownerExecuteMode
-                 --    , groupReadMode
-                 --    , groupExecuteMode
-                 --    , otherReadMode
-                 --    , otherExecuteMode
-                 --    , groupWriteMode
-                 --    , otherWriteMode
-                     ]
-  , statLinkCount = 5
-  , statFileOwner = 1000
-  , statFileGroup = 1000
-  , statSpecialDeviceID = 0
-  , statFileSize  = 4096
-  , statBlocks    = 1
-  , statAccessTime= 0
-  , statModificationTime = 0
-  , statStatusChangeTime = 0
-  }
-
-
 ---------------------------------------------------------------------------------
 --  Parse arguments and main
 ---------------------------------------------------------------------------------
-
-data Options = Options {optLog :: String}
-
-
-defaultOptions = Options { optLog = undefined }
-
-
-options :: [OptDescr (Options -> IO Options)]
-options =
-  [ Option "V?" ["version"] (NoArg printVersion) "show version number"
-  , Option "l"  ["log"] (ReqArg (\ arg opt -> return opt {optLog = arg})
-                          "FILE") "write log to FILE"
-  , Option "h"  ["help"] (NoArg printHelp) "show help message"
-  ]
-
-
-printHelp :: Options -> IO Options
-printHelp _ = do
-  prg <- getProgName
-  hPutStrLn stderr "Usage:"
-  hPutStrLn stderr $ "\t"++prg++" mountpoint confdir homedir"
-  hPutStrLn stderr (usageInfo prg options)
-  exitWith ExitSuccess
-
-
-printVersion :: Options -> IO Options
-printVersion _ = do
-  hPutStrLn stderr $ "Version " ++ version
-  exitWith ExitSuccess
-
-
-validateDirs :: [String] -> IO (String, DirPair)
-validateDirs dirs =
-                   do
-                      existingDirs <- filterM doesDirectoryExist dirs
-                      canonicalDirs <- mapM canonicalizePath existingDirs
-                      if length canonicalDirs == 3 then do
-                          let (mountpoint : realdirs) = canonicalDirs
-                              (c: h: [])              = realdirs
-                          return (mountpoint, DP { conf = C c
-                                                 , home = H h
-                                                 }
-                                 )
-                         else do
-                           hPutStrLn stderr "Wrong number of arguments"
-                           printHelp defaultOptions
-                           exitWith $ ExitFailure 1
-
 
 main :: IO ()
 main = do
