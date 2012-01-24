@@ -15,7 +15,7 @@ import System.Environment(withArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nubBy)
-import Data.ByteString.Char8 (pack)
+import Data.ByteString.Char8 (pack,unpack)
 import System.Console.GetOpt
 
 version = "0.0.2"
@@ -125,11 +125,17 @@ funionFSOps dir =
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
                 , fuseRead               = funionRead dir
+                , fuseWrite              = funionWrite dir
                 , fuseOpenDirectory      = funionOpenDirectory dir
                 , fuseReadDirectory      = funionReadDirectory dir
                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
+				, fuseAccess			 = funionAccess dir
                 }
 
+
+funionAccess :: [FilePath] -> FilePath -> Int -> IO Errno
+funionAccess dirsToUnion (_:path)  code = do
+  return eOK
 
 funionGetFileStat :: [FilePath] -> FilePath -> IO (Either Errno FileStat)
 funionGetFileStat dirsToUnion (_:dir) = do
@@ -142,7 +148,7 @@ funionOpen dirsToUnion (_:path) mode flags = do
   file <- funionLookUp dirsToUnion path
   case file of
     Just f -> do
-      fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
+      fd <- openFd (funionActualPath f) mode Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
 
@@ -161,9 +167,9 @@ funionGetFileSystemStats :: [FilePath]->String -> IO (Either Errno FileSystemSta
 funionGetFileSystemStats fileTree  str =
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
-    , fsStatBlockCount = 1
-    , fsStatBlocksFree = 1
-    , fsStatBlocksAvailable = 1
+    , fsStatBlockCount = 1000
+    , fsStatBlocksFree = 1000
+    , fsStatBlocksAvailable = 1000
     , fsStatFileCount  = 5      -- IS THIS CORRECT?
     , fsStatFilesFree  = 10     -- WHAT IS THIS?
     , fsStatMaxNameLength = 255 -- SEEMS SMALL?
@@ -186,13 +192,23 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
   return $ Right $ pack bytes
 
 
+funionWrite :: [FilePath] -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
+funionWrite dirsToUnion (_:path) fd content offset = do
+  (Just file) <- funionLookUp dirsToUnion path
+  fdSeek fd AbsoluteSeek offset
+  bytes <- fdWrite fd (unpack content)
+  return $ Right $ bytes
+
 dirStat = FileStat { statEntryType = Directory
   , statFileMode = foldr1 unionFileModes
                      [ ownerReadMode
+					 , ownerWriteMode
                      , ownerExecuteMode
                      , groupReadMode
+					 , groupWriteMode
                      , groupExecuteMode
                      , otherReadMode
+					 , otherWriteMode
                      , otherExecuteMode
                      ]
   , statLinkCount = 5
