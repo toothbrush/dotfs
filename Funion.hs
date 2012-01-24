@@ -56,6 +56,8 @@ data DirPair = DP { home :: Home
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
 
+debug :: String -> IO ()
+debug str = appendFile "/tmp/foo" (str ++ "\n")
 
 fileExists, dirExists :: FilePath -> FilePath -> IO Bool
 fileExists path name = doesFileExist $ path </> name
@@ -113,8 +115,10 @@ funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
     dirinConf <- confdir `dirExists` path
-    case dirinConf of
-        True -> do asdf <- readDir.(</> path) $ confdir
+    if dirinConf then
+                do
+                   debug $ path ++ "dir in conf"
+                   asdf <- readDir.(</> path) $ confdir
                    let contents = funionContents asdf
                    return $ Just $ FunionFS {
                                               funionEntryName   = takeFileName path
@@ -123,37 +127,33 @@ funionLookUp dirsToUnion path = do
                                             , funionFileStat    = dirStat
                                             , funionContents    = contents
                                           }
-        False -> do existsinConf <- confdir `fileExists` path
-                    stats <- confdir `getFileStats` path
-                    if existsinConf then return $ Just $ stats
-                    else return Nothing
+        else     do existsinConf <- confdir `fileExists` path
+                    if existsinConf then do
+                                            stats <- confdir `getFileStats` path
+                                            debug $ path ++  "file in conf."
+                                            return $ Just $ stats
+                    else do
+                          dirinHome <- homedir `dirExists` path
+                          if dirinHome then
+                                      do
+                                         debug $ path ++ " dir in home."
+                                         asdf <- readDir.(</> path) $ homedir
+                                         let contents = funionContents asdf
+                                         return $ Just $ FunionFS {
+                                                                    funionEntryName   = takeFileName path
+                                                                  , funionActualPath  = ""
+                                                                  , funionVirtualPath = path
+                                                                  , funionFileStat    = dirStat
+                                                                  , funionContents    = contents
+                                                                }
+                              else     do existsinHome <- homedir `fileExists` path
+                                          if existsinHome then do
+                                                        debug $ path ++ " file in home."
+                                                        stats <- homedir `getFileStats` path
+                                                        return $ Just $ stats
+                                          else return Nothing
 
 
-
-
-
-
-{-
-  let (H homedir) = home dirsToUnion
-  case homedir `dirExists` path of
-    False ->  .. eh
-    True ->
-  dirs      <- filterM (`dirExists` path) dirsToUnion
-  dirList   <- mapM (readDir.(</> path)) dirs
-  files     <- filterM (`fileExists` path) dirsToUnion
-  fileStats <- mapM (`getFileStats` path) files
-  let contents = map funionContents dirList
-  case dirs of
-    []        -> return $ if length fileStats > 0 then Just $ head fileStats else Nothing
-    otherwise -> return $ Just $ if length fileStats > 0 then head fileStats else FunionFS {
-            funionEntryName   = takeFileName path
-          , funionActualPath  = ""
-          , funionVirtualPath = path
-          , funionFileStat    = dirStat
-          , funionContents    = nubBy (\x y -> funionEntryName x == funionEntryName y)  $ concat contents
-        }
-
--}
 
 funionFSOps :: DirPair -> FuseOperations Fd
 funionFSOps dir =
@@ -177,7 +177,7 @@ funionGetFileStat dp (_:dir) = do
   lookup <- funionLookUp dp dir
   case lookup of
     Just file -> return $ Right $ funionFileStat file
-    Nothing -> return $ Left eNOENT
+    Nothing   -> return $ Left eNOENT
 
 
 {-
