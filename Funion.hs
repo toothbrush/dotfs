@@ -134,7 +134,7 @@ funionLookUp dirsToUnion path = do
                           return $ Just stats'
         Nothing -> do homeVersion <- statIfExists homedir path
                       case homeVersion of
-                        Just _ -> return homeVersion
+                        Just _  -> return homeVersion
                         Nothing -> return Nothing
 
 
@@ -142,18 +142,17 @@ statIfExists :: FilePath -> FilePath -> IO (Maybe FunionFS)
 statIfExists dir file = do
                           existsAsDir <- dir `dirExists` file
                           if existsAsDir then
-                                      do
-                                         debug $ file ++ " is a dir in "++dir
+                                      do debug $ file ++ " is a dir in "++dir
                                          asdf <- readDir.(</> file) $ dir
                                          let contents = funionContents asdf
                                          stats <- dir `getDirStats` file
                                          return $ Just $ stats
-                              else     do existsAsFile <- dir `fileExists` file
-                                          if existsAsFile then do
-                                                        debug $ file ++ " is a file in " ++ dir
-                                                        stats <- dir `getFileStats` file
-                                                        return $ Just $ stats
-                                          else return Nothing
+                          else        do existsAsFile <- dir `fileExists` file
+                                         if existsAsFile then do
+                                                       debug $ file ++ " is a file in " ++ dir
+                                                       stats <- dir `getFileStats` file
+                                                       return $ Just $ stats
+                                         else return Nothing
 
 
 
@@ -163,10 +162,10 @@ funionFSOps dir =
   defaultFuseOps {
                    fuseGetFileStat        = funionGetFileStat dir
                  , fuseGetFileSystemStats = funionGetFileSystemStats dir
+                 , fuseOpenDirectory      = funionOpenDirectory dir
                  }
 {-
   defaultFuseOps{
-                , fuseOpenDirectory      = funionOpenDirectory dir
                 , fuseReadDirectory      = funionReadDirectory dir
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
@@ -211,8 +210,11 @@ funionFlush _ _ fd = do closeFd fd; return eOK
 -}
 
 
-funionOpenDirectory :: [FilePath] -> FilePath -> IO Errno
-funionOpenDirectory dirsToUnion (_:path) = do
+funionOpenDirectory :: DirPair -> FilePath -> IO Errno
+funionOpenDirectory dirs (_:path) = do
+  let (H homedir) = home dirs
+      (C confdir) = conf dirs
+      dirsToUnion = [homedir, confdir]
   extantDirs <- filterM (`dirExists` path) dirsToUnion
   return $ if length extantDirs > 0 then eOK else eNOENT
 
