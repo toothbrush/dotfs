@@ -112,8 +112,8 @@ funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
-    inConf <- confdir `dirExists` path
-    case inConf of
+    dirinConf <- confdir `dirExists` path
+    case dirinConf of
         True -> do asdf <- readDir.(</> path) $ confdir
                    let contents = funionContents asdf
                    return $ Just $ FunionFS {
@@ -123,7 +123,10 @@ funionLookUp dirsToUnion path = do
                                             , funionFileStat    = dirStat
                                             , funionContents    = contents
                                           }
-        False -> return Nothing
+        False -> do existsinConf <- confdir `fileExists` path
+                    stats <- confdir `getFileStats` path
+                    if existsinConf then return $ Just $ stats
+                    else return Nothing
 
 
 
@@ -234,6 +237,7 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
 -}
 
 
+-- TODO: real directory stat, not this fake info.
 dirStat = FileStat {
     statEntryType = Directory
   , statFileMode = foldr1 unionFileModes
