@@ -21,6 +21,9 @@ import System.Console.GetOpt
 version = "0.0.2"
 
 {-
+ - TODO: we can fill in actualPath now. do we want to though?
+ -}
+{-
 OPEN QUESTIONS:
 For now, I suppose that I could just specify the directories that I want to union on the command line.
 What about making this more aggressive and having some way of specifying unioning rules?  Perhaps
@@ -46,8 +49,8 @@ data FunionFS = FunionFS {
   }
  deriving Show
 
-data Conf = C String deriving Show
-data Home = H String deriving Show
+data Conf = C FilePath deriving Show
+data Home = H FilePath deriving Show
 data DirPair = DP { home :: Home
                   , conf :: Conf
                   }
@@ -56,6 +59,7 @@ data DirPair = DP { home :: Home
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
 
+-- TODO: nicer logging, to a variable filename (State / Reader monad?)
 debug :: String -> IO ()
 debug str = appendFile "/tmp/foo" (str ++ "\n")
 
@@ -114,50 +118,43 @@ funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
-    dirinConf <- confdir `dirExists` path
-    if dirinConf then
-                do
-                   debug $ path ++ "dir in conf"
-                   asdf <- readDir.(</> path) $ confdir
-                   let contents = funionContents asdf
-                   return $ Just $ FunionFS {
-                                              funionEntryName   = takeFileName path
-                                            , funionActualPath  = ""
-                                            , funionVirtualPath = path
-                                            , funionFileStat    = dirStat
-                                            , funionContents    = contents
-                                          }
-        else     do existsinConf <- confdir `fileExists` path
-                    if existsinConf then do
-                                            stats <- confdir `getFileStats` path
-                                            -- restrict conf file permissions.
-                                            let oldFileStat = funionFileStat stats
-                                                -- TODO set owner to current user
-                                                newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
-                                                stats'   = stats {funionFileStat = newFileStat}
+    confVersion <- statIfExists confdir path
+    case confVersion of
 
-                                            debug $ path ++  "file in conf."
-                                            return $ Just $ stats'
-                    else do
-                          dirinHome <- homedir `dirExists` path
-                          if dirinHome then
+        Just stats ->  do let oldFileStat = funionFileStat stats
+                              -- TODO set owner to current user
+                              newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
+                              stats'      = stats {funionFileStat = newFileStat}
+                          return $ Just stats'
+
+        Nothing -> do homeVersion <- statIfExists homedir path
+                      case homeVersion of
+                        Just _ -> return homeVersion
+                        Nothing -> return Nothing
+
+
+statIfExists :: FilePath -> FilePath -> IO (Maybe FunionFS)
+statIfExists dir file = do
+                          existsAsDir <- dir `dirExists` file
+                          if existsAsDir then
                                       do
-                                         debug $ path ++ " dir in home."
-                                         asdf <- readDir.(</> path) $ homedir
+                                         debug $ file ++ " is a dir in "++dir
+                                         asdf <- readDir.(</> file) $ dir
                                          let contents = funionContents asdf
                                          return $ Just $ FunionFS {
-                                                                    funionEntryName   = takeFileName path
+                                                                    funionEntryName   = takeFileName file
                                                                   , funionActualPath  = ""
-                                                                  , funionVirtualPath = path
+                                                                  , funionVirtualPath = file
                                                                   , funionFileStat    = dirStat
                                                                   , funionContents    = contents
-                                                                }
-                              else     do existsinHome <- homedir `fileExists` path
-                                          if existsinHome then do
-                                                        debug $ path ++ " file in home."
-                                                        stats <- homedir `getFileStats` path
+                                                                  }
+                              else     do existsAsFile <- dir `fileExists` file
+                                          if existsAsFile then do
+                                                        debug $ file ++ " is a file in " ++ dir
+                                                        stats <- dir `getFileStats` file
                                                         return $ Just $ stats
                                           else return Nothing
+
 
 
 
@@ -322,17 +319,23 @@ printVersion _ = do
 
 
 validateDirs :: [String] -> IO (String, DirPair)
-validateDirs dirs
-  | length dirs == 3 = let (mountpoint : realdirs) = dirs
-                           (c: h: []) = realdirs
-                       in return (mountpoint, (DP { conf = C c
-                                                  , home = H h
-                                                  }
-                                                  )
-                       )
-  | otherwise        = do hPutStrLn stderr "Wrong number of arguments"
-                          printHelp defaultOptions
-                          exitWith $ ExitFailure 1
+validateDirs dirs =
+                   do
+                      existingDirs <- filterM doesDirectoryExist dirs
+                      canonicalDirs <- mapM canonicalizePath existingDirs
+                      hPutStrLn stderr $ (show existingDirs)
+                      if length canonicalDirs == 3 then do
+                          let (mountpoint : realdirs) = canonicalDirs
+                              (c: h: []) = realdirs
+                          return (mountpoint, (DP { conf = C c
+                                            , home = H h
+                                            }
+                                            )
+                                 )
+                      else do
+                        hPutStrLn stderr "Wrong number of arguments"
+                        printHelp defaultOptions
+                        exitWith $ ExitFailure 1
 
 
 main :: IO ()
