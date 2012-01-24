@@ -121,6 +121,16 @@ readDir dir file = do
     , funionContents    = fileList ++ dirList
   }
 
+{-
+ - this is a rather important function for the system.
+ - it finds a file by name. the idea is, if a file or directory
+ - exists in the conf tree, return that. if not, return one
+ - that may be in home.
+ -
+ - the root is a special case: it makes more sense to return the
+ - homedir as far as space / writing new files etc goes, but we also
+ - want to return the contents of the root of conf as dirContents.
+ -}
 funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
 funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
                                    -- on the root of the unionFS. Therefore,
