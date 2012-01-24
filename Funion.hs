@@ -243,6 +243,8 @@ funionReadDirectory dirs (_:dir) = do
 
 funionRead  :: DirPair -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
+  --this is unused, so it's probably for error checking. should die gracefully
+  --if something goes wrong, not throw unmatched pattern...
   --(Just file) <- funionLookUp dirsToUnion path
   fdSeek fd AbsoluteSeek offset
   (bytes, num) <- fdRead fd  byteCount
