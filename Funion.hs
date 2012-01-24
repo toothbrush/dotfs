@@ -15,7 +15,7 @@ import System.Environment(withArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nubBy)
-import Data.ByteString.Char8 (pack)
+import Data.ByteString.Char8 (pack,unpack)
 import System.Console.GetOpt
 
 version = "0.0.2"
@@ -169,12 +169,15 @@ funionFSOps dir =
                  }
 {-
   defaultFuseOps{
-                  fuseGetFileStat        = funionGetFileStat dir
                 , fuseOpenDirectory      = funionOpenDirectory dir
                 , fuseReadDirectory      = funionReadDirectory dir
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
                 , fuseRead               = funionRead dir
+                , fuseWrite              = funionWrite dir
+                , fuseOpenDirectory      = funionOpenDirectory dir
+                , fuseReadDirectory      = funionReadDirectory dir
+                , fuseAccess             = funionAccess dir
                 }
                 -}
 
@@ -185,6 +188,12 @@ funionGetFileStat dp (_:dir) = do
   case lookup of
     Just file -> return $ Right $ funionFileStat file
     Nothing   -> return $ Left eNOENT
+{-
+funionAccess :: [FilePath] -> FilePath -> Int -> IO Errno
+funionAccess dirsToUnion (_:path)  code = do
+  return eOK
+  -}
+
 
 
 {-
@@ -193,7 +202,7 @@ funionOpen dirsToUnion (_:path) mode flags = do
   file <- funionLookUp dirsToUnion path
   case file of
     Just f -> do
-      fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
+      fd <- openFd (funionActualPath f) mode Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
 -}
@@ -216,9 +225,9 @@ funionGetFileSystemStats :: DirPair -> String -> IO (Either Errno FileSystemStat
 funionGetFileSystemStats dp str = -- use stats from home dp
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
-    , fsStatBlockCount = 1
-    , fsStatBlocksFree = 1
-    , fsStatBlocksAvailable = 1
+    , fsStatBlockCount = 1000
+    , fsStatBlocksFree = 1000
+    , fsStatBlocksAvailable = 1000
     , fsStatFileCount  = 5      -- IS THIS CORRECT?
     , fsStatFilesFree  = 10     -- WHAT IS THIS?
     , fsStatMaxNameLength = 255 -- SEEMS SMALL?
@@ -245,16 +254,26 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
 -}
 
 
+funionWrite :: DirPair -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
+funionWrite dirsToUnion (_:path) fd content offset = do
+  (Just file) <- funionLookUp dirsToUnion path
+  fdSeek fd AbsoluteSeek offset
+  bytes <- fdWrite fd (unpack content)
+  return $ Right $ bytes
+
 -- TODO: real directory stat, not this fake info.
 dirStat = FileStat {
     statEntryType = Directory
   , statFileMode = foldr1 unionFileModes
                      [ ownerReadMode
+                 --    , ownerWriteMode
                      , ownerExecuteMode
                  --    , groupReadMode
                  --    , groupExecuteMode
                  --    , otherReadMode
                  --    , otherExecuteMode
+                 --    , groupWriteMode
+                 --    , otherWriteMode
                      ]
   , statLinkCount = 5
   , statFileOwner = 1000
