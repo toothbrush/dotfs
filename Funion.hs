@@ -101,6 +101,11 @@ getStats entrytype uri = do
      , funionContents = []
   }
 
+{-
+ - when my brain isn't spaghetti, what we should do is
+ - rely on readDir more (lift some functionality from funionLookUp)
+ - and do a proper dirStat.
+ -}
 
 readDir :: FilePath -> FilePath -> IO FunionFS
 readDir dir file = do
@@ -112,6 +117,8 @@ readDir dir file = do
   -- list of directories
   dirs     <- filterM (dirExists uri) contents
   dirList  <- mapM (getDirStats uri) dirs
+
+  file <- funionLookup 
 
   return FunionFS {
       funionEntryName   = takeFileName uri
