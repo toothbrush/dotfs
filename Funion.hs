@@ -46,6 +46,12 @@ data FunionFS = FunionFS {
   }
  deriving Show
 
+data Conf = C String deriving Show
+data Home = H String deriving Show
+data DirPair = DP { home :: Home
+                  , conf :: Conf
+                  }
+                 deriving (Show)
 
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
@@ -68,7 +74,8 @@ getStats entrytype uri = do
       funionEntryName   = takeFileName uri
     , funionActualPath  = uri
     , funionVirtualPath = ""
-    , funionFileStat    = FileStat { statEntryType = entrytype
+    , funionFileStat    = FileStat
+        { statEntryType = entrytype
         , statFileMode  = fileMode status
         , statLinkCount = linkCount status
         , statFileOwner = fileOwner status
@@ -79,7 +86,7 @@ getStats entrytype uri = do
         , statAccessTime= accessTime status
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
-      }
+        }
      , funionContents = []
   }
 
@@ -101,8 +108,33 @@ readDir uri = do
     , funionContents    = fileList ++ dirList
   }
 
-funionLookUp :: [FilePath] -> FilePath -> IO (Maybe FunionFS)
+funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
 funionLookUp dirsToUnion path = do
+    let (H homedir) = home dirsToUnion
+        (C confdir) = conf dirsToUnion
+    inConf <- confdir `dirExists` path
+    case inConf of
+        True -> do asdf <- readDir.(</> path) $ confdir
+                   let contents = funionContents asdf
+                   return $ Just $ FunionFS {
+                                              funionEntryName   = takeFileName path
+                                            , funionActualPath  = ""
+                                            , funionVirtualPath = path
+                                            , funionFileStat    = dirStat
+                                            , funionContents    = contents
+                                          }
+        False -> return Nothing
+
+
+
+
+
+
+{-
+  let (H homedir) = home dirsToUnion
+  case homedir `dirExists` path of
+    False ->  .. eh
+    True ->
   dirs      <- filterM (`dirExists` path) dirsToUnion
   dirList   <- mapM (readDir.(</> path)) dirs
   files     <- filterM (`fileExists` path) dirsToUnion
@@ -118,9 +150,14 @@ funionLookUp dirsToUnion path = do
           , funionContents    = nubBy (\x y -> funionEntryName x == funionEntryName y)  $ concat contents
         }
 
+-}
 
-funionFSOps :: [FilePath] -> FuseOperations Fd
+funionFSOps :: DirPair -> FuseOperations Fd
 funionFSOps dir =
+  defaultFuseOps {
+                   fuseGetFileStat        = funionGetFileStat dir
+                 }
+{-
   defaultFuseOps{ fuseGetFileStat        = funionGetFileStat dir
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
@@ -129,14 +166,18 @@ funionFSOps dir =
                 , fuseReadDirectory      = funionReadDirectory dir
                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
                 }
+                -}
 
 
-funionGetFileStat :: [FilePath] -> FilePath -> IO (Either Errno FileStat)
-funionGetFileStat dirsToUnion (_:dir) = do
-  Just file <- funionLookUp dirsToUnion dir
-  return $ Right $ funionFileStat file
+funionGetFileStat :: DirPair -> FilePath -> IO (Either Errno FileStat)
+funionGetFileStat dp (_:dir) = do
+  lookup <- funionLookUp dp dir
+  case lookup of
+    Just file -> return $ Right $ funionFileStat file
+    Nothing -> return $ Left eNOENT
 
 
+{-
 funionOpen :: [FilePath] -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
 funionOpen dirsToUnion (_:path) mode flags = do
   file <- funionLookUp dirsToUnion path
@@ -145,10 +186,13 @@ funionOpen dirsToUnion (_:path) mode flags = do
       fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
+-}
 
+{-
 -- What if 'fd' is no good?  What will happen?
 funionFlush :: [FilePath] -> FilePath -> Fd -> IO Errno
 funionFlush _ _ fd = do closeFd fd; return eOK
+-}
 
 
 funionOpenDirectory :: [FilePath] -> FilePath -> IO Errno
@@ -170,23 +214,28 @@ funionGetFileSystemStats fileTree  str =
     }
 
 
+{-
 funionReadDirectory :: [FilePath] ->FilePath -> IO (Either Errno [(FilePath, FileStat)])
 funionReadDirectory dirsToUnion (_:dir) = do
   entry <- funionLookUp dirsToUnion dir
   let contents = funionContents $ fromJust entry
   let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
   return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
+-}
 
 
+{-
 funionRead  :: [FilePath] -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
   (Just file) <- funionLookUp dirsToUnion path
   fdSeek fd AbsoluteSeek offset
   (bytes, num) <- fdRead fd  byteCount
   return $ Right $ pack bytes
+-}
 
 
-dirStat = FileStat { statEntryType = Directory
+dirStat = FileStat {
+    statEntryType = Directory
   , statFileMode = foldr1 unionFileModes
                      [ ownerReadMode
                      , ownerExecuteMode
@@ -229,6 +278,8 @@ options =
 printHelp :: Options -> IO (Options)
 printHelp _ = do
   prg <- getProgName
+  hPutStrLn stderr "Usage:"
+  hPutStrLn stderr $ "\t"++prg++" mountpoint confdir homedir"
   hPutStrLn stderr (usageInfo prg options)
   exitWith ExitSuccess
 
@@ -239,10 +290,18 @@ printVersion _ = do
   exitWith ExitSuccess
 
 
-validateDirs :: [String] -> IO (String, [String])
+validateDirs :: [String] -> IO (String, DirPair)
 validateDirs dirs
-  | length dirs >= 3 = return (head dirs, tail dirs)
-  | otherwise        = do hPutStrLn stderr "Wrong number of arguments"; exitWith $ ExitFailure 1
+  | length dirs == 3 = let (mountpoint : realdirs) = dirs
+                           (c: h: []) = realdirs
+                       in return (mountpoint, (DP { conf = C c
+                                                  , home = H h
+                                                  }
+                                                  )
+                       )
+  | otherwise        = do hPutStrLn stderr "Wrong number of arguments"
+                          printHelp defaultOptions
+                          exitWith $ ExitFailure 1
 
 
 main :: IO ()
@@ -254,4 +313,7 @@ main = do
   opts <- foldl (>>=) (return defaultOptions) actions
 
   (mp, dirs) <- validateDirs dirList
+  hPutStrLn stderr ("Mountpoint = \t "++mp)
+  hPutStrLn stderr ("     Home  = \t "++(show (home dirs)))
+  hPutStrLn stderr ("     Conf  = \t "++(show (conf dirs)))
   withArgs (mp:fuseargs) $ fuseMain (funionFSOps dirs) defaultExceptionHandler
