@@ -54,6 +54,9 @@ data FunionFS = FunionFS {
 instance Eq FunionFS where
   (==) x y = funionEntryName x == funionEntryName y
 
+data Version = Conf
+             | Home deriving Show
+
 data Conf = C FilePath deriving Show
 data Home = H FilePath deriving Show
 data DirPair = DP { home :: Home
@@ -131,7 +134,7 @@ readDir dir file = do
  - homedir as far as space / writing new files etc goes, but we also
  - want to return the contents of the root of conf as dirContents.
  -}
-funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
+funionLookUp :: DirPair -> FilePath -> IO (Maybe (FunionFS, Version))
 funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
                                    -- on the root of the unionFS. Therefore,
                                    -- return the root of home. Makes more sense.
@@ -144,11 +147,11 @@ funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
           Just hV -> do
             let homeContents = funionContents hV
             case confVersion of
-                Nothing -> return (Just hV)
+                Nothing -> return (Just (hV, Home))
                 Just cV -> do
                     let confContents = funionContents cV
                         finalContents = nub $ homeContents ++ confContents
-                    return $ Just $ hV { funionContents = finalContents }
+                    return $ Just $ (hV { funionContents = finalContents }, Home)
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
@@ -158,10 +161,10 @@ funionLookUp dirsToUnion path = do
                               -- TODO set owner to current user
                               newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
                               stats'      = stats {funionFileStat = newFileStat}
-                          return $ Just stats'
+                          return $ Just (stats', Conf)
         Nothing -> do homeVersion <- statIfExists homedir path
                       case homeVersion of
-                        Just _  -> return homeVersion
+                        Just hV -> return $ Just (hV, Home)
                         Nothing -> return Nothing
 
 
@@ -192,13 +195,13 @@ funionFSOps dir =
                  , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  , fuseOpenDirectory      = funionOpenDirectory dir
                  , fuseReadDirectory      = funionReadDirectory dir
+              --   , fuseRead               = funionRead dir
+                 , fuseFlush              = funionFlush dir
+               --  , fuseOpen               = funionOpen dir
                  }
 {-
   defaultFuseOps{
-                , fuseOpen               = funionOpen dir
-                , fuseFlush              = funionFlush dir
-                , fuseRead               = funionRead dir
-                , fuseWrite              = funionWrite dir
+        -----   , fuseWrite              = funionWrite dir
                 , fuseAccess             = funionAccess dir
                 }
                 -}
@@ -208,8 +211,8 @@ funionGetFileStat :: DirPair -> FilePath -> IO (Either Errno FileStat)
 funionGetFileStat dp (_:dir) = do
   lookup <- funionLookUp dp dir
   case lookup of
-    Just file -> return $ Right $ funionFileStat file
-    Nothing   -> return $ Left eNOENT
+    Just (file,_) -> return $ Right $ funionFileStat file
+    Nothing       -> return $ Left eNOENT
 {-
 funionAccess :: [FilePath] -> FilePath -> Int -> IO Errno
 funionAccess dirsToUnion (_:path)  code = do
@@ -229,11 +232,9 @@ funionOpen dirsToUnion (_:path) mode flags = do
     Nothing -> return (Left eNOENT)
 -}
 
-{-
 -- What if 'fd' is no good?  What will happen?
-funionFlush :: [FilePath] -> FilePath -> Fd -> IO Errno
+funionFlush :: DirPair -> FilePath -> Fd -> IO Errno
 funionFlush _ _ fd = do closeFd fd; return eOK
--}
 
 
 funionOpenDirectory :: DirPair -> FilePath -> IO Errno
@@ -262,9 +263,12 @@ funionGetFileSystemStats dp str = -- use stats from home dp
 funionReadDirectory :: DirPair -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
 funionReadDirectory dirs (_:dir) = do
   entry <- funionLookUp dirs dir
-  let contents = funionContents $ fromJust entry
-  let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
-  return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
+  case entry of
+    Nothing -> return $ Left eNOENT
+    Just (e,_)-> do
+        let contents = funionContents e
+        let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
+        return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
 
 
 {-
