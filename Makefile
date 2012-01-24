@@ -9,4 +9,5 @@ lint:
 	clear; hlint -c Funion.hs | head -n 20
 
 clean:
-	rm -f funion Funion.hi Funion.o ; 
+	rm -f funion Funion.hi Funion.o ;
+	rm -rf dist
