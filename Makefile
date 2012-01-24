@@ -1,7 +1,8 @@
 SHELL=zsh
 
-all:  funion
+all: funion
 
+# hm, this should depend on all hs files...
 funion: Funion.hs
 	ghc --make $< -o $@ -threaded
 
