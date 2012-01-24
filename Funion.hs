@@ -99,6 +99,7 @@ getStats entrytype uri = do
 
 readDir :: FilePath -> IO (FunionFS)
 readDir uri = do
+  debug $ "reading dir: " ++ uri
   contents <- dirContents uri
   files    <- filterM (fileExists uri) contents
   fileList <- mapM (getFileStats uri) files
@@ -110,23 +111,27 @@ readDir uri = do
       funionEntryName   = takeFileName uri
     , funionActualPath  = ""
     , funionVirtualPath = uri
-    , funionFileStat    = dirStat
+    , funionFileStat    = dirStat --TODO do properly.
     , funionContents    = fileList ++ dirList
   }
 
 funionLookUp :: DirPair -> FilePath -> IO (Maybe FunionFS)
+funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
+                                   -- on the root of the unionFS. Therefore,
+                                   -- return the root of home. Makes more sense.
+        let (H homedir) = home dirsToUnion
+        homeVersion <- statIfExists homedir ""
+        return homeVersion
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
     confVersion <- statIfExists confdir path
     case confVersion of
-
         Just stats ->  do let oldFileStat = funionFileStat stats
                               -- TODO set owner to current user
                               newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
                               stats'      = stats {funionFileStat = newFileStat}
                           return $ Just stats'
-
         Nothing -> do homeVersion <- statIfExists homedir path
                       case homeVersion of
                         Just _ -> return homeVersion
@@ -141,13 +146,8 @@ statIfExists dir file = do
                                          debug $ file ++ " is a dir in "++dir
                                          asdf <- readDir.(</> file) $ dir
                                          let contents = funionContents asdf
-                                         return $ Just $ FunionFS {
-                                                                    funionEntryName   = takeFileName file
-                                                                  , funionActualPath  = ""
-                                                                  , funionVirtualPath = file
-                                                                  , funionFileStat    = dirStat
-                                                                  , funionContents    = contents
-                                                                  }
+                                         stats <- dir `getDirStats` file
+                                         return $ Just $ stats
                               else     do existsAsFile <- dir `fileExists` file
                                           if existsAsFile then do
                                                         debug $ file ++ " is a file in " ++ dir
@@ -259,6 +259,7 @@ funionWrite dirsToUnion (_:path) fd content offset = do
   return $ Right $ bytes
 
 -- TODO: real directory stat, not this fake info.
+-- why was this even necessary?
 dirStat = FileStat {
     statEntryType = Directory
   , statFileMode = foldr1 unionFileModes
