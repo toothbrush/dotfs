@@ -42,8 +42,8 @@ Requirements
 
 Installation
 ------------
-Install `libfuse-dev`.  On Ubuntu 9.10:
-    sudo apt-get install libfuse-dev
+Install :
+    sudo apt-get install libfuse-dev fuse-utils
 
 Install Funion:
     cabal install funion
