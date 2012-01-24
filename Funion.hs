@@ -165,15 +165,16 @@ funionFSOps :: DirPair -> FuseOperations Fd
 funionFSOps dir =
   defaultFuseOps {
                    fuseGetFileStat        = funionGetFileStat dir
+                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  }
 {-
-  defaultFuseOps{ fuseGetFileStat        = funionGetFileStat dir
+  defaultFuseOps{
+                  fuseGetFileStat        = funionGetFileStat dir
+                , fuseOpenDirectory      = funionOpenDirectory dir
+                , fuseReadDirectory      = funionReadDirectory dir
                 , fuseOpen               = funionOpen dir
                 , fuseFlush              = funionFlush dir
                 , fuseRead               = funionRead dir
-                , fuseOpenDirectory      = funionOpenDirectory dir
-                , fuseReadDirectory      = funionReadDirectory dir
-                , fuseGetFileSystemStats = funionGetFileSystemStats dir
                 }
                 -}
 
@@ -210,8 +211,9 @@ funionOpenDirectory dirsToUnion (_:path) = do
   return $ if length extantDirs > 0 then eOK else eNOENT
 
 
-funionGetFileSystemStats :: [FilePath]->String -> IO (Either Errno FileSystemStats)
-funionGetFileSystemStats fileTree  str =
+-- TODO: there must be a system call for this.
+funionGetFileSystemStats :: DirPair -> String -> IO (Either Errno FileSystemStats)
+funionGetFileSystemStats dp str = -- use stats from home dp
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
     , fsStatBlockCount = 1
@@ -249,10 +251,10 @@ dirStat = FileStat {
   , statFileMode = foldr1 unionFileModes
                      [ ownerReadMode
                      , ownerExecuteMode
-                     , groupReadMode
-                     , groupExecuteMode
-                     , otherReadMode
-                     , otherExecuteMode
+                 --    , groupReadMode
+                 --    , groupExecuteMode
+                 --    , otherReadMode
+                 --    , otherExecuteMode
                      ]
   , statLinkCount = 5
   , statFileOwner = 1000
