@@ -1,5 +1,3 @@
-{-# LANGUAGE StandaloneDeriving #-}
-
 module Main where
 
 import qualified Data.ByteString.Char8 as B
@@ -13,7 +11,6 @@ import System.Exit
 import System.Fuse
 import System.IO
 import System(getArgs)
-import System.Environment(withArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nub)
@@ -105,7 +102,7 @@ getStats entrytype uri = do
   }
 
 
-readDir :: FilePath -> FilePath -> IO (FunionFS)
+readDir :: FilePath -> FilePath -> IO FunionFS
 readDir dir file = do
   let uri = dir </> file
   debug $ "reading dir: " ++ uri
@@ -151,7 +148,7 @@ funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
                 Just cV -> do
                     let confContents = funionContents cV
                         finalContents = nub $ homeContents ++ confContents
-                    return $ Just $ (hV { funionContents = finalContents }, Home)
+                    return $ Just (hV { funionContents = finalContents }, Home)
 funionLookUp dirsToUnion path = do
     let (H homedir) = home dirsToUnion
         (C confdir) = conf dirsToUnion
@@ -177,13 +174,14 @@ statIfExists dir file = do
                                          let contents = funionContents asdf
                                          stats <- dir `getDirStats` file
                                          let stats' = stats {funionContents = contents}
-                                         return $ Just $ stats'
-                          else        do existsAsFile <- dir `fileExists` file
+                                         return $ Just stats'
+                             else
+                                      do existsAsFile <- dir `fileExists` file
                                          if existsAsFile then do
                                                        debug $ file ++ " is a file in " ++ dir
                                                        stats <- dir `getFileStats` file
-                                                       return $ Just $ stats
-                                         else return Nothing
+                                                       return $ Just stats
+                                            else return Nothing
 
 
 
@@ -338,7 +336,7 @@ options =
   ]
 
 
-printHelp :: Options -> IO (Options)
+printHelp :: Options -> IO Options
 printHelp _ = do
   prg <- getProgName
   hPutStrLn stderr "Usage:"
@@ -347,7 +345,7 @@ printHelp _ = do
   exitWith ExitSuccess
 
 
-printVersion :: Options -> IO  (Options)
+printVersion :: Options -> IO Options
 printVersion _ = do
   hPutStrLn stderr $ "Version " ++ version
   exitWith ExitSuccess
@@ -358,24 +356,22 @@ validateDirs dirs =
                    do
                       existingDirs <- filterM doesDirectoryExist dirs
                       canonicalDirs <- mapM canonicalizePath existingDirs
-                      hPutStrLn stderr $ (show existingDirs)
                       if length canonicalDirs == 3 then do
                           let (mountpoint : realdirs) = canonicalDirs
-                              (c: h: []) = realdirs
-                          return (mountpoint, (DP { conf = C c
-                                            , home = H h
-                                            }
-                                            )
+                              (c: h: [])              = realdirs
+                          return (mountpoint, DP { conf = C c
+                                                 , home = H h
+                                                 }
                                  )
-                      else do
-                        hPutStrLn stderr "Wrong number of arguments"
-                        printHelp defaultOptions
-                        exitWith $ ExitFailure 1
+                         else do
+                           hPutStrLn stderr "Wrong number of arguments"
+                           printHelp defaultOptions
+                           exitWith $ ExitFailure 1
 
 
 main :: IO ()
 main = do
-  (args, fuseargs) <- liftM (break (\x -> x == "--")) getArgs
+  (args, fuseargs) <- liftM (break (== "--")) getArgs
   let (actions, dirList, errors) = getOpt Permute options args
 
   -- Currently ignoring.  Need to thread logging throughout
@@ -383,6 +379,6 @@ main = do
 
   (mp, dirs) <- validateDirs dirList
   hPutStrLn stderr ("Mountpoint = \t "++mp)
-  hPutStrLn stderr ("     Home  = \t "++(show (home dirs)))
-  hPutStrLn stderr ("     Conf  = \t "++(show (conf dirs)))
+  hPutStrLn stderr ("     Home  = \t "++show (home dirs))
+  hPutStrLn stderr ("     Conf  = \t "++show (conf dirs))
   withArgs (mp:fuseargs) $ fuseMain (funionFSOps dirs) defaultExceptionHandler
