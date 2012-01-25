@@ -11,8 +11,8 @@ import System.Posix.Files
 -- there is a system call for this.
 -- but never mind, since we have a read-only file
 -- system, we don't need that.
-funionGetFileSystemStats :: Conf -> String -> IO (Either Errno FileSystemStats)
-funionGetFileSystemStats dp str = -- use stats from home dp
+dotfsGetFileSystemStats :: Conf -> String -> IO (Either Errno FileSystemStats)
+dotfsGetFileSystemStats dp str = -- use stats from home dp
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
     , fsStatBlockCount = 1000

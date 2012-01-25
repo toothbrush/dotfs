@@ -1,14 +1,14 @@
 SHELL=zsh
 
-all: funion
+all: dotfs
 
 # hm, this should depend on all hs files...
-funion: Funion.hs Core/*.hs Util/*.hs
-	ghc --make Funion.hs -o $@ -threaded
+dotfs: DotFS.hs Core/*.hs Util/*.hs
+	ghc --make DotFS.hs -o $@ -threaded
 
 lint:
 	clear; hlint -c **/*.hs | less
 
 clean:
-	rm -vf funion **/*.hi **/*.o ;
+	rm -vf dotfs **/*.hi **/*.o ;
 	rm -vrf dist

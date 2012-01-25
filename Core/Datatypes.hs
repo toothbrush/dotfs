@@ -2,17 +2,17 @@ module Core.Datatypes where
 
 import System.Fuse
 
-data FunionFS = FunionFS {
-    funionEntryName     :: FilePath
-  , funionActualPath    :: FilePath
-  , funionVirtualPath   :: FilePath
-  , funionFileStat      :: FileStat
-  , funionContents      :: [FunionFS]
+data DotFS = DotFS {
+    dotfsEntryName     :: FilePath
+  , dotfsActualPath    :: FilePath
+  , dotfsVirtualPath   :: FilePath
+  , dotfsFileStat      :: FileStat
+  , dotfsContents      :: [DotFS]
   }
  deriving Show
 
-instance Eq FunionFS where
-  (==) x y = funionEntryName x == funionEntryName y
+instance Eq DotFS where
+  (==) x y = dotfsEntryName x == dotfsEntryName y
 
 data Conf = C FilePath deriving Show
 

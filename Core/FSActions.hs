@@ -29,14 +29,14 @@ fileExists path name = doesFileExist $ path </> name
 dirExists  path name = doesDirectoryExist $ path </> name
 
 
-getFileStats, getDirStats :: FilePath-> FilePath -> IO FunionFS
+getFileStats, getDirStats :: FilePath-> FilePath -> IO DotFS
 getFileStats path name = do p <- canonicalizePath $ path </> name
                             getStats RegularFile p
 getDirStats  path name = do p <- canonicalizePath $ path </> name
                             getStats Directory p
 
 
-getStats :: EntryType -> FilePath -> IO FunionFS
+getStats :: EntryType -> FilePath -> IO DotFS
 getStats entrytype uri = do
   status <- getFileStatus uri
   children <- case entrytype of
@@ -49,11 +49,11 @@ getStats entrytype uri = do
                     dirList  <- mapM (getDirStats uri) dirs
                     return $ dirList ++ fileList
     RegularFile -> return []
-  return FunionFS {
-      funionEntryName   = takeFileName uri
-    , funionActualPath  = uri
-    , funionVirtualPath = ""
-    , funionFileStat    = FileStat
+  return DotFS {
+      dotfsEntryName   = takeFileName uri
+    , dotfsActualPath  = uri
+    , dotfsVirtualPath = ""
+    , dotfsFileStat    = FileStat
         { statEntryType = entrytype
         , statFileMode  = fileMode status
         , statLinkCount = linkCount status
@@ -66,11 +66,11 @@ getStats entrytype uri = do
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
         }
-     , funionContents = children
+     , dotfsContents = children
   }
 
 
-statIfExists :: FilePath -> FilePath -> IO (Maybe FunionFS)
+statIfExists :: FilePath -> FilePath -> IO (Maybe DotFS)
 statIfExists dir file = do
                           existsAsDir <- dir `dirExists` file
                           if existsAsDir then
@@ -85,17 +85,17 @@ statIfExists dir file = do
                                                        return $ Just stats
                                             else return Nothing
 
-funionFSOps :: Conf -> FuseOperations String
-funionFSOps dir =
+dotFSOps :: Conf -> FuseOperations String
+dotFSOps dir =
   defaultFuseOps {
-                   fuseGetFileStat        = funionGetFileStat dir
-                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
-                 , fuseOpenDirectory      = funionOpenDirectory dir
-                 , fuseReadDirectory      = funionReadDirectory dir
-                 , fuseRead               = funionRead dir
-                 , fuseOpen               = funionOpen dir
-                 --, fuseSynchronizeFile    = funionSynchronizeFile dir -- this should reload/reparse the file
-                 --, fuseReadSymbolicLink   = funionReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
+                   fuseGetFileStat        = dotfsGetFileStat dir
+                 , fuseGetFileSystemStats = dotfsGetFileSystemStats dir
+                 , fuseOpenDirectory      = dotfsOpenDirectory dir
+                 , fuseReadDirectory      = dotfsReadDirectory dir
+                 , fuseRead               = dotfsRead dir
+                 , fuseOpen               = dotfsOpen dir
+                 --, fuseSynchronizeFile    = dotfsSynchronizeFile dir -- this should reload/reparse the file
+                 --, fuseReadSymbolicLink   = dotfsReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
                  }
 
 
@@ -120,61 +120,61 @@ funionFSOps dir =
  - it finds a file by name. the idea is, if a file or directory
  - exists in the conf tree, return that.
  -}
-funionLookUp :: Conf -> FilePath -> IO (Maybe FunionFS)
-funionLookUp (C confdir) path = do
+dotfsLookUp :: Conf -> FilePath -> IO (Maybe DotFS)
+dotfsLookUp (C confdir) path = do
     confVersion <- statIfExists confdir path
     case confVersion of
-        Just stats ->  do let oldFileStat = funionFileStat stats
+        Just stats ->  do let oldFileStat = dotfsFileStat stats
                               -- TODO set owner to current user
                               newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
-                              stats'      = stats {funionFileStat = newFileStat}
+                              stats'      = stats {dotfsFileStat = newFileStat}
                           return $ Just stats'
         Nothing -> return Nothing
 
 
 
-funionGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
-funionGetFileStat dp (_:dir) = do
-  lookup <- funionLookUp dp dir
+dotfsGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
+dotfsGetFileStat dp (_:dir) = do
+  lookup <- dotfsLookUp dp dir
   case lookup of
-    Just file -> return $ Right $ funionFileStat file
+    Just file -> return $ Right $ dotfsFileStat file
     Nothing   -> return $ Left eNOENT
 
 
 
-funionOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno String)
-funionOpen dirs (_:path) ReadOnly flags = do
-  file <- funionLookUp dirs path
+dotfsOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno String)
+dotfsOpen dirs (_:path) ReadOnly flags = do
+  file <- dotfsLookUp dirs path
   case file of
     Just f -> do
-      fd <- readFile (funionActualPath f)
+      fd <- readFile (dotfsActualPath f)
       return (Right fd)
     Nothing -> return (Left eNOENT)
-funionOpen dirs (_:path) mode flags = return (Left eACCES)
+dotfsOpen dirs (_:path) mode flags = return (Left eACCES)
 
 -- TODO: check permissions with `getPermissions`
-funionOpenDirectory :: Conf -> FilePath -> IO Errno
-funionOpenDirectory (C confdir) (_:path) = do
+dotfsOpenDirectory :: Conf -> FilePath -> IO Errno
+dotfsOpenDirectory (C confdir) (_:path) = do
   extantDirs <- confdir `dirExists` path
   return $ if extantDirs then eOK else eNOENT
 
 
-funionReadDirectory :: Conf -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
-funionReadDirectory dirs@(C confdir) (_:dir) = do
-  entry <- funionLookUp dirs dir
+dotfsReadDirectory :: Conf -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
+dotfsReadDirectory dirs@(C confdir) (_:dir) = do
+  entry <- dotfsLookUp dirs dir
   case entry of
     Nothing -> return $ Left eNOENT
     Just e -> do
-        let contents = funionContents e
-        let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
+        let contents = dotfsContents e
+        let dirContents = map (\x -> (dotfsEntryName x :: String , dotfsFileStat x)) contents
         dotstats <- confdir `getDirStats` dir
-        return $ Right $ [ (".", funionFileStat dotstats), ("..", dirStat)] ++ dirContents
+        return $ Right $ [ (".", dotfsFileStat dotstats), ("..", dirStat)] ++ dirContents
 
-funionRead  :: Conf -> FilePath -> String -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
-funionRead dirsToUnion (_:path) fd byteCount offset = do
+dotfsRead  :: Conf -> FilePath -> String -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
+dotfsRead dirsToUnion (_:path) fd byteCount offset = do
   --this is unused, so it's probably for error checking. should die gracefully
   --if something goes wrong, not throw unmatched pattern...
-  --(Just file) <- funionLookUp dirsToUnion path
+  --(Just file) <- dotfsLookUp dirsToUnion path
   let a = drop (fromIntegral offset) fd
       b = take (fromIntegral byteCount) a
   return $ Right $ pack b
