@@ -7,7 +7,7 @@ dotfs: DotFS.hs Core/*.hs Util/*.hs
 	ghc --make DotFS.hs -o $@ -threaded
 
 lint:
-	clear; hlint -c **/*.hs | less
+	clear; hlint -c **/*.hs
 
 clean:
 	rm -vf dotfs **/*.hi **/*.o ;
