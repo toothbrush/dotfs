@@ -27,9 +27,7 @@ import Data.ByteString.Char8 (pack,unpack)
  -}
 {-
 OPEN QUESTIONS:
-For now, I suppose that I could just specify the directories that I want to union on the command line.
-What about making this more aggressive and having some way of specifying unioning rules?  Perhaps
-via a DSL?
+how to parse a file, then return as bytestring in which one can seek etc?
 
 How should I present SymLinks?
 -}
@@ -56,8 +54,10 @@ dirExists  path name = doesDirectoryExist $ path </> name
 
 
 getFileStats, getDirStats :: FilePath-> FilePath -> IO FunionFS
-getFileStats path name = getStats RegularFile (path </> name)
-getDirStats  path name = getStats Directory (path </> name)
+getFileStats path name = do p <- canonicalizePath $ path </> name
+                            getStats RegularFile p
+getDirStats  path name = do p <- canonicalizePath $ path </> name
+                            getStats Directory p
 
 
 getStats :: EntryType -> FilePath -> IO FunionFS
@@ -65,6 +65,7 @@ getStats entrytype uri = do
   status <- getFileStatus uri
   children <- case entrytype of
     Directory -> do contents <- dirContents uri
+                    -- list of files
                     files    <- filterM (fileExists uri) contents
                     fileList <- mapM (getFileStats uri) files
                     -- list of directories
@@ -84,7 +85,7 @@ getStats entrytype uri = do
         , statFileGroup = fileGroup status
         , statSpecialDeviceID = specialDeviceID status
         , statFileSize  = fileSize status
-        , statBlocks    = 1            -- This is WRONG.  TODO
+        , statBlocks    = fromIntegral $ fileSize status `div` 1024
         , statAccessTime= accessTime status
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
@@ -95,12 +96,7 @@ getStats entrytype uri = do
 {-
  - this is a rather important function for the system.
  - it finds a file by name. the idea is, if a file or directory
- - exists in the conf tree, return that. if not, return one
- - that may be in home.
- -
- - the root is a special case: it makes more sense to return the
- - homedir as far as space / writing new files etc goes, but we also
- - want to return the contents of the root of conf as dirContents.
+ - exists in the conf tree, return that.
  -}
 funionLookUp :: Conf -> FilePath -> IO (Maybe FunionFS)
 funionLookUp (C confdir) path = do
@@ -133,16 +129,13 @@ funionFSOps :: Conf -> FuseOperations Fd
 funionFSOps dir =
   defaultFuseOps {
                    fuseGetFileStat        = funionGetFileStat dir
-           --      , fuseGetFileSystemStats = funionGetFileSystemStats dir
+                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  , fuseOpenDirectory      = funionOpenDirectory dir
                  , fuseReadDirectory      = funionReadDirectory dir
                  , fuseRead               = funionRead dir
                  , fuseFlush              = funionFlush dir
                  , fuseOpen               = funionOpen dir
                  }
-{-
-        -----   , fuseWrite              = funionWrite dir
-                -}
 
 
 funionGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
@@ -177,15 +170,15 @@ funionOpenDirectory (C confdir) (_:path) = do
 
 
 funionReadDirectory :: Conf -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
-funionReadDirectory dirs (_:dir) = do
+funionReadDirectory dirs@(C confdir) (_:dir) = do
   entry <- funionLookUp dirs dir
   case entry of
     Nothing -> return $ Left eNOENT
     Just e -> do
         let contents = funionContents e
         let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
-        return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
-
+        dotstats <- confdir `getDirStats` dir
+        return $ Right $ [ (".", funionFileStat dotstats), ("..", dirStat)] ++ dirContents
 
 funionRead  :: Conf -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
@@ -195,16 +188,6 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
   fdSeek fd AbsoluteSeek offset
   (bytes, num) <- fdRead fd  byteCount
   return $ Right $ pack bytes
-
-
-{-
-funionWrite :: Conf -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
-funionWrite dirsToUnion (_:path) fd content offset = do
-  (Just file) <- funionLookUp dirsToUnion path
-  fdSeek fd AbsoluteSeek offset
-  bytes <- fdWrite fd (unpack content)
-  return $ Right $ bytes
-  -}
 
 ---------------------------------------------------------------------------------
 --  Parse arguments and main

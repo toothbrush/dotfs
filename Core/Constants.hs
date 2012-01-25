@@ -8,37 +8,29 @@ import Core.Datatypes
 import System.Fuse
 import System.Posix.Files
 
--- TODO: there must be a system call for this.
+-- there is a system call for this.
+-- but never mind, since we have a read-only file
+-- system, we don't need that.
 funionGetFileSystemStats :: Conf -> String -> IO (Either Errno FileSystemStats)
 funionGetFileSystemStats dp str = -- use stats from home dp
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
     , fsStatBlockCount = 1000
-    , fsStatBlocksFree = 1000
-    , fsStatBlocksAvailable = 1000
+    , fsStatBlocksFree = 0
+    , fsStatBlocksAvailable = 0
     , fsStatFileCount  = 5      -- IS THIS CORRECT?
     , fsStatFilesFree  = 10     -- WHAT IS THIS?
     , fsStatMaxNameLength = 255 -- SEEMS SMALL?
     }
 
--- TODO: real directory stat, not this fake info.
--- why was this even necessary?
+-- this is dummy data, and turns out to never be
+-- shown, even when doing `ls -la`
 dirStat = FileStat {
     statEntryType = Directory
-  , statFileMode = foldr1 unionFileModes
-                     [ ownerReadMode
-                 --    , ownerWriteMode
-                     , ownerExecuteMode
-                 --    , groupReadMode
-                 --    , groupExecuteMode
-                 --    , otherReadMode
-                 --    , otherExecuteMode
-                 --    , groupWriteMode
-                 --    , otherWriteMode
-                     ]
+  , statFileMode  = ownerReadMode
   , statLinkCount = 5
-  , statFileOwner = 1000
-  , statFileGroup = 1000
+  , statFileOwner = 666
+  , statFileGroup = 666
   , statSpecialDeviceID = 0
   , statFileSize  = 4096
   , statBlocks    = 1
