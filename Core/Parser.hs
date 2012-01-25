@@ -23,7 +23,12 @@ bodyP :: Parser String
 bodyP = many1 anyChar
 
 docP :: Parser (String, String)
-docP = ((,) <$> headerP <*> bodyP) <|> ((\x -> ("",x)) <$> bodyP)
+docP = (,) <$> option "" headerP <*> bodyP
+
+
+--keyvalP :: Parser KeyVal
+--keyvalP = Setting <$> idP <* string "=" *> settingP <* string ";"
+
 
 test2 = case (parse docP "" "e>>   ..blaat..   <</dotfile>>\n meer config \n meer!!!") of
          Left err  -> print err
@@ -40,7 +45,7 @@ processConfig path fd = case parse configFile path fd of
 
 present :: (String, String) -> ConfigFile
 present ("", body)     = Vanilla body
-present (header, body) = Special header [FreeText body]
+present (header, body) = Special [Setting "" header] [FreeText body]
 
 
 configFile :: Parser (String, String)

@@ -21,9 +21,16 @@ data ConfigFile = Vanilla String
                 | Special Header Body
                 deriving Show
 
-type Body       = [Block]
-type Header = String
-type Condition  = String
+type Body          = [Block]
+type Header        = [KeyVal]
+
+data KeyVal = Setting VariableName Value
+              deriving Show
+
+
+
+type Value         = String
+type Condition     = String
 type VariableName  = String
 
 data Block    = FreeText String
