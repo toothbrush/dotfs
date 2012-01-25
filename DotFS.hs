@@ -29,12 +29,11 @@ import Data.ByteString.Char8 (pack,unpack)
  -}
 {-
 OPEN QUESTIONS:
-how to parse a file, then return as bytestring in which one can seek etc?
 
 How should I present SymLinks?
 -}
 
-{- TODO(nathan)
+{- TODO
 * There's currently no real error checking whatsoever.
 * Add dotfsWrite
 * Thread in logging
