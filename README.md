@@ -1,60 +1,48 @@
-FUNION
-======
+DOTFS
+=====
 
-About
------
-FUNION (**F**use **Union**) presents a unioned view of two or more directories.
-As an example:
-    /A/fileA1
-      /fileA2
-      /dir1
-        /fileA3
-    
-    /B/fileB1
-      /dir1
-        /fileB2
-        /dir2/fileB3
-    
-    
-    /FUNION(A,B)/fileA1
-                /fileA2
-                /fileB1
-                /dir1/fileA3
-                     /fileB2
-                     /dir2/fileB3
-    
-Common use case is when you have media spread across non-RAIDed disks and you
-would like to have a single view of the media.  For example: `/disk1/dvds/{tv,
-movies}` and `/disk2/dvds/{tv,movies}`.  You'd prefer to just have
-`/dvds/{tv,movies}` which is a unioned view of the two.
-
-Features
---------
-Currently supports unioning of 2+ directory trees.  Though, currently the
-unioned file-system is read only.
+DotFS is first and foremost a work in progress. The idea is to eventually be able to point DotFS to a folder containing
+your dotfiles containing special DotFS syntax, which will then be made available as a virtual filesystem at a user-specified
+mountpoint. The files will be scanned for special keywords and presented on the virtual filesystem, possibly configured
+per-host or per-OS. The use case is a user wanting automatic configuration adjustment in larger config files with shared sections.
 
 
 Requirements
 ------------
-* Linux/Unix.
+* POSIX system
 * [FUSE](http://fuse.sourceforge.net/)
 * [GHC](http://hackage.haskell.org/platform/) (Haskell platform recommended)
 
 Installation
 ------------
-Install :
-    sudo apt-get install libfuse-dev fuse-utils
+Install some dependencies:
 
-Install Funion:
-    cabal install funion
+
+```
+sudo apt-get install libfuse-dev fuse-utils
+```
+
+Install DotFS:
+
+
+```
+cabal configure
+cabal build
+```
 
 Usage
 -----
 There are currently very few options:
-    funion [OPTIONS] MOUNTPOINT DIR1 DIR2 ...
-where MOUNTPOINT, DIR1, DIR2, ..., are paths.
+
+```
+dotfs [OPTIONS] MOUNTPOINT CONFDIR
+```
+
+where MOUNTPOINT and CONFDIR are paths.
+
 OPTIONS:
-  -h    
-  -?    print help
-  -V    print version
+
+*  -h    
+*  -?    print help
+*  -V    print version
 
