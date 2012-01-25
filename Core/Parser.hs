@@ -1,44 +1,48 @@
 module Core.Parser where
-import Control.Applicative((<*))
+import Control.Applicative ((<*),(<$>),(<*>),(*>))
 import Text.Parsec
 import Text.Parsec.String
+import Text.Parsec.Char
 import Text.Parsec.Error
 import Text.Parsec.Token
+import Text.Parsec.Prim
 import Text.Parsec.Language
-import Text.ParserCombinators.Parsec.Combinator ()
 
 
 import Core.Datatypes
 
+
+beginHeaderP, endHeaderP :: Parser String
+beginHeaderP = spaces *> string "<<dotfile>>"
+endHeaderP = string "<</dotfile>>"
+
+headerP :: Parser String
+headerP = beginHeaderP *> manyTill anyChar endHeaderP
+
+bodyP :: Parser String
+bodyP = many1 anyChar
+
+docP :: Parser (String, String)
+docP = ((,) <$> headerP <*> bodyP) <|> ((\x -> ("",x)) <$> bodyP)
+
+test2 = case (parse docP "" "e>>   ..blaat..   <</dotfile>>\n meer config \n meer!!!") of
+         Left err  -> print err
+         Right xs  -> print xs
+test = case (parse docP "" "   \n \t <<dotfile>>   ..blaat..   <</dotfile>>\n meer config \n meer!!!") of
+         Left err  -> print err
+         Right xs  -> print xs
+
+
 processConfig :: FilePath -> String -> String
-processConfig path fd = case parse mainParseConfig path fd of
+processConfig path fd = case parse configFile path fd of
                             Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
-                            Right cf -> "parse = \n" ++ show cf
+                            Right cf -> show $ present cf
+
+present :: (String, String) -> ConfigFile
+present ("", body)     = Vanilla body
+present (header, body) = Special header [FreeText body]
 
 
+configFile :: Parser (String, String)
+configFile = docP
 
-headersep :: Parser String
-headersep = do
-            char '\n'
-            manyTill (char '-') (char '\n')
-
-
-hdr :: Parser String
-hdr = (manyTill anyChar (try headersep))
-
-configFile :: Parser ConfigFile
-configFile = do  (do
-                    h <- hdr
-                    rest <- many1 anyChar
-                    return $ Special h [FreeText rest]
-                       )
-                 <|>
-                 (do
-                     rest <- many1 anyChar
-                     return $ Vanilla rest)
-
-
-
-
-mainParseConfig :: Parser ConfigFile
-mainParseConfig = configFile
