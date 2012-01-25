@@ -15,11 +15,11 @@ def = emptyDef{
            --   , commentEnd = "-}"
                identStart = letter
               , identLetter = alphaNum
-              , opStart = oneOf "~&=:"
-              , opLetter = oneOf "~&=:"
-              , reservedOpNames = ["~", "&", "=", ":="]
+              , opStart = oneOf "~&=:><"
+              , opLetter = oneOf "~&=:><"
+              , reservedOpNames = [{- "~", "&", -} "==", ":="]
               , reservedNames = ["true", "false",
-                                 "if", "then", "else", "fi"
+                                 "<<if", ">>", "<</if>>"
                                 ]
               }
 
@@ -34,6 +34,7 @@ TokenParser{ parens = m_parens
 exprparser :: Parser Expr
 exprparser = buildExpressionParser table term <?> "expression"
 table = [
+         [Infix (m_reservedOp "==" >> return (Duo Iff)) AssocLeft]
         ]
 term = m_whiteSpace *>
          (   m_parens exprparser
@@ -44,3 +45,40 @@ term = m_whiteSpace *>
          <|> (m_reserved "false" >> return (Con (B False)))
          )
        <* m_whiteSpace
+
+headerParser :: Parser Header
+headerParser = m_whiteSpace >> assignparser <* eof
+    where
+      assignparser :: Parser Header
+      assignparser = m_semiSep1 assign1
+      assign1 = m_whiteSpace >> (
+                do { v <- m_identifier
+                   ; m_reservedOp ":="
+                   ; e <- exprparser
+                   ; return (v := e)
+                }
+                )
+
+bodyparser :: Parser Body
+bodyparser = m_whiteSpace >> stmtparser <* eof
+    where
+      stmtparser :: Parser Body
+      stmtparser = m_semiSep1 stmt1
+      stmt1 = m_whiteSpace >> (
+                {-(m_reserved "nop" >> return Nop)
+              <|> do { v <- m_identifier
+                     ; m_reservedOp ":="
+                     ; e <- exprparser
+                     ; return (v := e)
+                     }
+              <|> -} do { m_reserved "<<if"
+                     ; b <- exprparser
+                     ; m_reserved ">>"
+                     ; p <- stmtparser
+                     ; m_reserved "<</if>>"
+                     ; return (If b p)
+                     }
+              <|> do { x <- many1 $ noneOf "\n"
+                     ; return (FreeText x)
+                     }
+                     ) <* m_whiteSpace

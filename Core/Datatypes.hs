@@ -28,7 +28,10 @@ data Assign = VariableName := Expr
 
 data Expr = Var String
           | Con Constant
+          | Duo Duop Expr Expr
           deriving Show
+
+data Duop = And | Iff deriving Show
 
 data Constant = S String
               | I Integer
@@ -38,6 +41,6 @@ data Constant = S String
 type VariableName  = String
 
 data Statement = FreeText String
-               | If Expr Statement
+               | If Expr Body
                | VarRef VariableName
                deriving Show
