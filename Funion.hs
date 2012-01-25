@@ -63,6 +63,15 @@ getDirStats  path name = getStats Directory (path </> name)
 getStats :: EntryType -> FilePath -> IO FunionFS
 getStats entrytype uri = do
   status <- getFileStatus uri
+  children <- case entrytype of
+    Directory -> do contents <- dirContents uri
+                    files    <- filterM (fileExists uri) contents
+                    fileList <- mapM (getFileStats uri) files
+                    -- list of directories
+                    dirs     <- filterM (dirExists uri) contents
+                    dirList  <- mapM (getDirStats uri) dirs
+                    return $ dirList ++ fileList
+    RegularFile -> return []
   return FunionFS {
       funionEntryName   = takeFileName uri
     , funionActualPath  = uri
@@ -80,32 +89,7 @@ getStats entrytype uri = do
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
         }
-     , funionContents = []
-  }
-
-{-
- - when my brain isn't spaghetti, what we should do is
- - rely on readDir more (lift some functionality from funionLookUp)
- - and do a proper dirStat.
- -}
-
-readDir :: FilePath -> FilePath -> IO FunionFS
-readDir dir file = do
-  let uri = dir </> file
-  debug $ "reading dir: " ++ uri
-  contents <- dirContents uri
-  files    <- filterM (fileExists uri) contents
-  fileList <- mapM (getFileStats uri) files
-  -- list of directories
-  dirs     <- filterM (dirExists uri) contents
-  dirList  <- mapM (getDirStats uri) dirs
-
-  return FunionFS {
-      funionEntryName   = takeFileName uri
-    , funionActualPath  = uri
-    , funionVirtualPath = uri -- TODO: this isn't even true
-    , funionFileStat    = dirStat --TODO do properly.
-    , funionContents    = fileList ++ dirList
+     , funionContents = children
   }
 
 {-
@@ -157,11 +141,8 @@ statIfExists dir file = do
                           existsAsDir <- dir `dirExists` file
                           if existsAsDir then
                                       do debug $ file ++ " is a dir in "++dir
-                                         asdf <- readDir dir file
-                                         let contents = funionContents asdf
                                          stats <- dir `getDirStats` file
-                                         let stats' = stats {funionContents = contents}
-                                         return $ Just stats'
+                                         return $ Just stats -- this already contains the children
                              else
                                       do existsAsFile <- dir `fileExists` file
                                          if existsAsFile then do
@@ -169,9 +150,6 @@ statIfExists dir file = do
                                                        stats <- dir `getFileStats` file
                                                        return $ Just stats
                                             else return Nothing
-
-
-
 
 funionFSOps :: DirPair -> FuseOperations Fd
 funionFSOps dir =
