@@ -55,7 +55,7 @@ fileExists path name = doesFileExist $ path </> name
 dirExists  path name = doesDirectoryExist $ path </> name
 
 
-getFileStats, getDirStats :: FilePath-> FilePath -> IO FunionFS
+getFileStats, getDirStats :: FilePath -> FilePath -> IO FunionFS
 getFileStats path name = getStats RegularFile (path </> name)
 getDirStats  path name = getStats Directory (path </> name)
 
@@ -163,7 +163,27 @@ funionFSOps dir =
                  , fuseOpen               = funionOpen dir
                  }
 {-
-        -----   , fuseWrite              = funionWrite dir
+                - possible options:
+fuseReadSymbolicLink :: FilePath -> IO (Either Errno FilePath)
+fuseCreateDevice :: FilePath -> EntryType -> FileMode -> DeviceID -> IO Errno
+fuseCreateDirectory :: FilePath -> FileMode -> IO Errno
+fuseRemoveLink :: FilePath -> IO Errno
+fuseRemoveDirectory :: FilePath -> IO Errno
+fuseCreateSymbolicLink :: FilePath -> FilePath -> IO Errno
+fuseRename :: FilePath -> FilePath -> IO Errno
+fuseCreateLink :: FilePath -> FilePath -> IO Errno
+fuseSetFileMode :: FilePath -> FileMode -> IO Errno
+fuseSetOwnerAndGroup :: FilePath -> UserID -> GroupID -> IO Errno
+fuseSetFileSize :: FilePath -> FileOffset -> IO Errno
+fuseSetFileTimes :: FilePath -> EpochTime -> EpochTime -> IO Errno
+fuseWrite :: FilePath -> fh -> ByteString -> FileOffset -> IO (Either Errno ByteCount)
+fuseRelease :: FilePath -> fh -> IO ()
+fuseSynchronizeFile :: FilePath -> SyncType -> IO Errno
+fuseReleaseDirectory :: FilePath -> IO Errno
+fuseSynchronizeDirectory :: FilePath -> SyncType -> IO Errno
+fuseAccess :: FilePath -> Int -> IO Errno
+fuseInit :: IO ()
+fuseDestroy :: IO ()
                 -}
 
 
@@ -210,13 +230,20 @@ funionOpenDirectory dirs (_:path) = do
 
 funionReadDirectory :: DirPair -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
 funionReadDirectory dirs (_:dir) = do
+  debug $ "Reading directory: "++dir
   entry <- funionLookUp dirs dir
   case entry of
     Nothing -> return $ Left eNOENT
-    Just (e,_)-> do
+    Just (e,version)-> do
         let contents = funionContents e
         let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
-        return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
+        realPath <- case version of
+                        Home -> do let (H homedir) = home dirs
+                                   return (homedir :: FilePath)
+                        Conf -> do let (C confdir) = conf dirs
+                                   return (confdir :: FilePath)
+        dotstats <- realPath `getDirStats` dir
+        return $ Right $ [ (".", funionFileStat dotstats), ("..", dirStat)] ++ dirContents
 
 
 funionRead  :: DirPair -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)

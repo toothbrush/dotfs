@@ -19,6 +19,7 @@ data Version = Conf
 
 data Conf = C FilePath deriving Show
 data Home = H FilePath deriving Show
+
 data DirPair = DP { home :: Home
                   , conf :: Conf
                   }
