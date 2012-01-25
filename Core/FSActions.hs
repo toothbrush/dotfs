@@ -3,6 +3,7 @@ module Core.FSActions where
 import Core.Datatypes
 import Util.Debug
 import Core.Constants
+import Core.Parser
 
 import qualified Data.ByteString.Char8 as B
 import System.Posix.Types
@@ -49,6 +50,12 @@ getStats entrytype uri = do
                     dirList  <- mapM (getDirStats uri) dirs
                     return $ dirList ++ fileList
     RegularFile -> return []
+  sz <- case entrytype of
+    Directory -> do return $ fileSize status
+    RegularFile -> do
+      fd <- readFile uri
+      let parsed = processConfig uri fd
+      return $ fromIntegral (length parsed)
   return DotFS {
       dotfsEntryName   = takeFileName uri
     , dotfsActualPath  = uri
@@ -60,8 +67,8 @@ getStats entrytype uri = do
         , statFileOwner = fileOwner status
         , statFileGroup = fileGroup status
         , statSpecialDeviceID = specialDeviceID status
-        , statFileSize  = fileSize status
-        , statBlocks    = fromIntegral $ fileSize status `div` 1024
+        , statFileSize  = sz
+        , statBlocks    = fromIntegral $ sz `div` 1024
         , statAccessTime= accessTime status
         , statModificationTime = modificationTime status
         , statStatusChangeTime = statusChangeTime status
@@ -94,7 +101,6 @@ dotFSOps dir =
                  , fuseReadDirectory      = dotfsReadDirectory dir
                  , fuseRead               = dotfsRead dir
                  , fuseOpen               = dotfsOpen dir
-                 --, fuseSynchronizeFile    = dotfsSynchronizeFile dir -- this should reload/reparse the file
                  --, fuseReadSymbolicLink   = dotfsReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
                  }
 
@@ -147,8 +153,11 @@ dotfsOpen dirs (_:path) ReadOnly flags = do
   file <- dotfsLookUp dirs path
   case file of
     Just f -> do
+      -- at this point load and parse the file.
       fd <- readFile (dotfsActualPath f)
-      return (Right fd)
+
+      let parsed = processConfig path fd
+      return (Right parsed)
     Nothing -> return (Left eNOENT)
 dotfsOpen dirs (_:path) mode flags = return (Left eACCES)
 
