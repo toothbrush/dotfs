@@ -1,4 +1,8 @@
 module Core.Parser where
+
+import Core.Datatypes
+import Core.PrettyPrinter
+
 import Control.Applicative ((<*),(<$>),(<*>),(*>))
 import Text.Parsec
 import Text.Parsec.String
@@ -9,19 +13,22 @@ import Text.Parsec.Prim
 import Text.Parsec.Language
 
 
-import Core.Datatypes
 
+
+-- a header is between these tags.
+headerP :: Parser String
+headerP = beginHeaderP *> manyTill anyChar endHeaderP
 
 beginHeaderP, endHeaderP :: Parser String
 beginHeaderP = spaces *> string "<<dotfile>>"
 endHeaderP = string "<</dotfile>>"
 
-headerP :: Parser String
-headerP = beginHeaderP *> manyTill anyChar endHeaderP
 
+-- a body is anything
 bodyP :: Parser String
 bodyP = many1 anyChar
 
+-- a document is an optional header, and a body
 docP :: Parser (String, String)
 docP = (,) <$> option "" headerP <*> bodyP
 

@@ -19,7 +19,6 @@ data Conf = C FilePath deriving Show
 
 data ConfigFile = Vanilla String
                 | Special Header Body
-                deriving Show
 
 type Body          = [Block]
 type Header        = [KeyVal]
