@@ -133,9 +133,27 @@ funionFSOps dir =
                  , fuseOpenDirectory      = funionOpenDirectory dir
                  , fuseReadDirectory      = funionReadDirectory dir
                  , fuseRead               = funionRead dir
-                 , fuseFlush              = funionFlush dir
                  , fuseOpen               = funionOpen dir
+                 , fuseRelease            = funionRelease dir
+                 --, fuseSynchronizeFile    = funionSynchronizeFile dir -- this should reload/reparse the file
+                 --, fuseReadSymbolicLink   = funionReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
                  }
+
+{- possible FUSE operations:
+ -- | Implements Unix98 @pread(2)@. It differs from
+ --   'System.Posix.Files.fdRead' by the explicit 'FileOffset' argument.
+ --   The @fuse.h@ documentation stipulates that this \"should return
+ --   exactly the number of bytes requested except on EOF or error,
+ --   otherwise the rest of the data will be substituted with zeroes.\"
+ fuseRead :: FilePath -> fh -> ByteCount -> FileOffset
+          -> IO (Either Errno B.ByteString),
+ --
+ -- | Check file access permissions; this will be called for the
+ --   access() system call.  If the @default_permissions@ mount option
+ --   is given, this method is not called.  This method is also not
+ --   called under Linux kernel versions 2.4.x
+ fuseAccess :: FilePath -> Int -> IO Errno, -- FIXME present a nicer type to Haskell
+ -}
 
 
 funionGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
@@ -155,13 +173,12 @@ funionOpen dirs (_:path) ReadOnly flags = do
       fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
-funionOpen dirs (_:path) mode flags = return (Left eNOENT)
+funionOpen dirs (_:path) mode flags = return (Left eACCES)
 
--- What if 'fd' is no good?  What will happen?
-funionFlush :: Conf -> FilePath -> Fd -> IO Errno
-funionFlush _ _ fd = do closeFd fd; return eOK
+funionRelease :: Conf -> FilePath -> Fd -> IO ()
+funionRelease _ _ fd = closeFd fd
 
-
+-- TODO: check permissions with `getPermissions`
 funionOpenDirectory :: Conf -> FilePath -> IO Errno
 funionOpenDirectory (C confdir) (_:path) = do
   extantDirs <- confdir `dirExists` path
