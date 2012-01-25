@@ -1,17 +1,16 @@
-name:                funion
+name:                dotfs
 version:             0.0.2
-synopsis:            A unioning file-system using HFuse 
-description:         A unioning file-system using HFuse
+synopsis:            Filesystem to manage and parse dotfiles
 category:            System
 license:             BSD3
 license-file:        LICENSE
-author:              Nathan Wiegand
-maintainer:          nathanwiegand@gmail.com
-homepage:            http://github.com/nathanwiegand/funion
+author:              Sjoerd Timmer and Paul van der Walt
+maintainer:          dotfs@denknerd.org
+homepage:            http://github.com/toothbrush/dotfs
 build-depends:       base
 build-type:          Simple
 
-executable:          funion
-main-is:             Funion.hs
+executable:          dotfs
+main-is:             DotFS.hs
 ghc-options:         -threaded
 build-depends:       bytestring >=0.9, haskell98, HFuse >= 0.2.1, directory>=1, unix >= 2.3, filepath >=1.1
