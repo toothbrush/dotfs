@@ -102,38 +102,16 @@ getStats entrytype uri = do
  - homedir as far as space / writing new files etc goes, but we also
  - want to return the contents of the root of conf as dirContents.
  -}
-funionLookUp :: DirPair -> FilePath -> IO (Maybe (FunionFS, Version))
-funionLookUp dirsToUnion ""   = do -- this corresponds to a stat (or something)
-                                   -- on the root of the unionFS. Therefore,
-                                   -- return the root of home. Makes more sense.
-        let (H homedir) = home dirsToUnion
-            (C confdir) = conf dirsToUnion
-        homeVersion <- statIfExists homedir ""
-        confVersion <- statIfExists confdir ""
-        case homeVersion of
-          Nothing -> return Nothing
-          Just hV -> do
-            let homeContents = funionContents hV
-            case confVersion of
-                Nothing -> return (Just (hV, Home))
-                Just cV -> do
-                    let confContents = funionContents cV
-                        finalContents = nub $ homeContents ++ confContents
-                    return $ Just (hV { funionContents = finalContents }, Home)
-funionLookUp dirsToUnion path = do
-    let (H homedir) = home dirsToUnion
-        (C confdir) = conf dirsToUnion
+funionLookUp :: Conf -> FilePath -> IO (Maybe FunionFS)
+funionLookUp (C confdir) path = do
     confVersion <- statIfExists confdir path
     case confVersion of
         Just stats ->  do let oldFileStat = funionFileStat stats
                               -- TODO set owner to current user
                               newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
                               stats'      = stats {funionFileStat = newFileStat}
-                          return $ Just (stats', Conf)
-        Nothing -> do homeVersion <- statIfExists homedir path
-                      case homeVersion of
-                        Just hV -> return $ Just (hV, Home)
-                        Nothing -> return Nothing
+                          return $ Just stats'
+        Nothing -> return Nothing
 
 
 statIfExists :: FilePath -> FilePath -> IO (Maybe FunionFS)
@@ -151,11 +129,11 @@ statIfExists dir file = do
                                                        return $ Just stats
                                             else return Nothing
 
-funionFSOps :: DirPair -> FuseOperations Fd
+funionFSOps :: Conf -> FuseOperations Fd
 funionFSOps dir =
   defaultFuseOps {
                    fuseGetFileStat        = funionGetFileStat dir
-                 , fuseGetFileSystemStats = funionGetFileSystemStats dir
+           --      , fuseGetFileSystemStats = funionGetFileSystemStats dir
                  , fuseOpenDirectory      = funionOpenDirectory dir
                  , fuseReadDirectory      = funionReadDirectory dir
                  , fuseRead               = funionRead dir
@@ -167,59 +145,49 @@ funionFSOps dir =
                 -}
 
 
-funionGetFileStat :: DirPair -> FilePath -> IO (Either Errno FileStat)
+funionGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
 funionGetFileStat dp (_:dir) = do
   lookup <- funionLookUp dp dir
   case lookup of
-    Just (file,_) -> return $ Right $ funionFileStat file
-    Nothing       -> return $ Left eNOENT
+    Just file -> return $ Right $ funionFileStat file
+    Nothing   -> return $ Left eNOENT
 
 
 
-funionOpen :: DirPair -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
+funionOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
 funionOpen dirs (_:path) ReadOnly flags = do
   file <- funionLookUp dirs path
   case file of
-    Just (f,_) -> do
+    Just f -> do
       fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
       return (Right fd)
     Nothing -> return (Left eNOENT)
-funionOpen dirs (_:path) mode flags = do
-  file <- funionLookUp dirs path
-  case file of
-    Just (f,Home) -> do
-      fd <- openFd (funionActualPath f) mode Nothing defaultFileFlags
-      return (Right fd)
-    Just (f,Conf)  -> return (Left eACCES)
-    Nothing -> return (Left eNOENT)
+funionOpen dirs (_:path) mode flags = return (Left eNOENT)
 
 -- What if 'fd' is no good?  What will happen?
-funionFlush :: DirPair -> FilePath -> Fd -> IO Errno
+funionFlush :: Conf -> FilePath -> Fd -> IO Errno
 funionFlush _ _ fd = do closeFd fd; return eOK
 
 
-funionOpenDirectory :: DirPair -> FilePath -> IO Errno
-funionOpenDirectory dirs (_:path) = do
-  let (H homedir) = home dirs
-      (C confdir) = conf dirs
-      dirsToUnion = [homedir, confdir]
-  extantDirs <- filterM (`dirExists` path) dirsToUnion
-  return $ if length extantDirs > 0 then eOK else eNOENT
+funionOpenDirectory :: Conf -> FilePath -> IO Errno
+funionOpenDirectory (C confdir) (_:path) = do
+  extantDirs <- confdir `dirExists` path
+  return $ if extantDirs then eOK else eNOENT
 
 
 
-funionReadDirectory :: DirPair -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
+funionReadDirectory :: Conf -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
 funionReadDirectory dirs (_:dir) = do
   entry <- funionLookUp dirs dir
   case entry of
     Nothing -> return $ Left eNOENT
-    Just (e,_)-> do
+    Just e -> do
         let contents = funionContents e
         let dirContents = map (\x -> (funionEntryName x :: String , funionFileStat x)) contents
         return $ Right $ [ (".", dirStat), ("..", dirStat)] ++ dirContents
 
 
-funionRead  :: DirPair -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
+funionRead  :: Conf -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
   --this is unused, so it's probably for error checking. should die gracefully
   --if something goes wrong, not throw unmatched pattern...
@@ -230,7 +198,7 @@ funionRead dirsToUnion (_:path) fd byteCount offset = do
 
 
 {-
-funionWrite :: DirPair -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
+funionWrite :: Conf -> FilePath -> Fd -> B.ByteString -> FileOffset -> IO (Either Errno ByteCount)
 funionWrite dirsToUnion (_:path) fd content offset = do
   (Just file) <- funionLookUp dirsToUnion path
   fdSeek fd AbsoluteSeek offset
@@ -252,6 +220,5 @@ main = do
 
   (mp, dirs) <- validateDirs dirList
   hPutStrLn stderr ("Mountpoint = \t "++mp)
-  hPutStrLn stderr ("     Home  = \t "++show (home dirs))
-  hPutStrLn stderr ("     Conf  = \t "++show (conf dirs))
+  hPutStrLn stderr ("     Conf  = \t "++show dirs)
   withArgs (mp:fuseargs) $ fuseMain (funionFSOps dirs) defaultExceptionHandler

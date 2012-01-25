@@ -8,18 +8,14 @@ import System.Directory
 import Control.Monad
 import System.Exit
 
-validateDirs :: [String] -> IO (String, DirPair)
+validateDirs :: [String] -> IO (String, Conf)
 validateDirs dirs =
                    do
                       existingDirs <- filterM doesDirectoryExist dirs
                       canonicalDirs <- mapM canonicalizePath existingDirs
-                      if length canonicalDirs == 3 then do
-                          let (mountpoint : realdirs) = canonicalDirs
-                              (c: h: [])              = realdirs
-                          return (mountpoint, DP { conf = C c
-                                                 , home = H h
-                                                 }
-                                 )
+                      if length canonicalDirs == 2 then do
+                          let (mountpoint : confdir : []) = canonicalDirs
+                          return (mountpoint, C confdir)
                          else do
                            hPutStrLn stderr "Wrong number of arguments"
                            printHelp defaultOptions

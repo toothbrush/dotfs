@@ -9,7 +9,7 @@ import System.Fuse
 import System.Posix.Files
 
 -- TODO: there must be a system call for this.
-funionGetFileSystemStats :: DirPair -> String -> IO (Either Errno FileSystemStats)
+funionGetFileSystemStats :: Conf -> String -> IO (Either Errno FileSystemStats)
 funionGetFileSystemStats dp str = -- use stats from home dp
   return $ Right FileSystemStats
     { fsStatBlockSize  = 512
