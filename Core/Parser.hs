@@ -33,10 +33,6 @@ docP :: Parser (String, String)
 docP = (,) <$> option "" headerP <*> bodyP
 
 
---keyvalP :: Parser KeyVal
---keyvalP = Setting <$> idP <* string "=" *> settingP <* string ";"
-
-
 test2 = case (parse docP "" "e>>   ..blaat..   <</dotfile>>\n meer config \n meer!!!") of
          Left err  -> print err
          Right xs  -> print xs

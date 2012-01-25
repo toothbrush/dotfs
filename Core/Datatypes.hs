@@ -20,19 +20,24 @@ data Conf = C FilePath deriving Show
 data ConfigFile = Vanilla String
                 | Special Header Body
 
-type Body          = [Block]
-type Header        = [KeyVal]
+type Body          = [Statement]
+type Header        = [Assign]
 
-data KeyVal = Setting VariableName Value
+data Assign = VariableName := Expr
               deriving Show
 
+data Expr = Var String
+          | Con Constant
+          deriving Show
 
+data Constant = S String
+              | I Integer
+              | B Bool
+              deriving Show
 
-type Value         = String
-type Condition     = String
 type VariableName  = String
 
-data Block    = FreeText String
-              | Conditional Condition Block
-              | Variable VariableName
-              deriving Show
+data Statement = FreeText String
+               | If Expr Statement
+               | VarRef VariableName
+               deriving Show
