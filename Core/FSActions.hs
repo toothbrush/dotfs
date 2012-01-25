@@ -85,7 +85,7 @@ statIfExists dir file = do
                                                        return $ Just stats
                                             else return Nothing
 
-funionFSOps :: Conf -> FuseOperations Fd
+funionFSOps :: Conf -> FuseOperations String
 funionFSOps dir =
   defaultFuseOps {
                    fuseGetFileStat        = funionGetFileStat dir
@@ -94,7 +94,6 @@ funionFSOps dir =
                  , fuseReadDirectory      = funionReadDirectory dir
                  , fuseRead               = funionRead dir
                  , fuseOpen               = funionOpen dir
-                 , fuseRelease            = funionRelease dir
                  --, fuseSynchronizeFile    = funionSynchronizeFile dir -- this should reload/reparse the file
                  --, fuseReadSymbolicLink   = funionReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
                  }
@@ -143,18 +142,15 @@ funionGetFileStat dp (_:dir) = do
 
 
 
-funionOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno Fd)
+funionOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno String)
 funionOpen dirs (_:path) ReadOnly flags = do
   file <- funionLookUp dirs path
   case file of
     Just f -> do
-      fd <- openFd (funionActualPath f) ReadOnly Nothing defaultFileFlags
+      fd <- readFile (funionActualPath f)
       return (Right fd)
     Nothing -> return (Left eNOENT)
 funionOpen dirs (_:path) mode flags = return (Left eACCES)
-
-funionRelease :: Conf -> FilePath -> Fd -> IO ()
-funionRelease _ _ fd = closeFd fd
 
 -- TODO: check permissions with `getPermissions`
 funionOpenDirectory :: Conf -> FilePath -> IO Errno
@@ -174,12 +170,12 @@ funionReadDirectory dirs@(C confdir) (_:dir) = do
         dotstats <- confdir `getDirStats` dir
         return $ Right $ [ (".", funionFileStat dotstats), ("..", dirStat)] ++ dirContents
 
-funionRead  :: Conf -> FilePath -> Fd -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
+funionRead  :: Conf -> FilePath -> String -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)
 funionRead dirsToUnion (_:path) fd byteCount offset = do
   --this is unused, so it's probably for error checking. should die gracefully
   --if something goes wrong, not throw unmatched pattern...
   --(Just file) <- funionLookUp dirsToUnion path
-  fdSeek fd AbsoluteSeek offset
-  (bytes, num) <- fdRead fd  byteCount
-  return $ Right $ pack bytes
+  let a = drop (fromIntegral offset) fd
+      b = take (fromIntegral byteCount) a
+  return $ Right $ pack b
 
