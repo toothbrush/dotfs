@@ -2,7 +2,7 @@ module Core.HeaderParser where
 
 import Core.Datatypes
 
-import Control.Applicative((<*),(*>))
+import Control.Applicative((<*),(*>),(<$>),(<*>))
 import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Expr
@@ -59,26 +59,24 @@ headerParser = m_whiteSpace >> assignparser <* eof
                 }
                 )
 
-bodyparser :: Parser Body
-bodyparser = m_whiteSpace >> stmtparser <* eof
+exampleheader = parse headerParser "-" "  hullp :=    3  ;\n  two := \"sdfsdf\" == 4 "
+
+-- this still sucks. possibly we should split the input into a
+-- list of strings (lines), lex that, then try parsing again.
+-- maybe even try a combination of alex&happy?
+bodyParser :: Parser Body
+bodyParser = m_whiteSpace >> stmtparser <* eof
     where
       stmtparser :: Parser Body
-      stmtparser = m_semiSep1 stmt1
-      stmt1 = m_whiteSpace >> (
-                {-(m_reserved "nop" >> return Nop)
-              <|> do { v <- m_identifier
-                     ; m_reservedOp ":="
-                     ; e <- exprparser
-                     ; return (v := e)
-                     }
-              <|> -} do { m_reserved "<<if"
-                     ; b <- exprparser
-                     ; m_reserved ">>"
-                     ; p <- stmtparser
-                     ; m_reserved "<</if>>"
-                     ; return (If b p)
-                     }
-              <|> do { x <- many1 $ noneOf "\n"
+      stmtparser = many1 stmt1 -- sepBy1 stmt1 (many1 (string "\n"))
+      stmt1 = (
+              (
+                If <$> ifhdr <*> stmtparser <* m_reserved "\n<</if>>\n"
+              )
+              <|> do { x <- many1 (noneOf "\n")
                      ; return (FreeText x)
                      }
-                     ) <* m_whiteSpace
+                     )
+      ifhdr = do { condition <- between (optional (string "\n") *> m_reserved "<<if") (m_reserved ">>\n") exprparser
+                 ; return condition
+      }

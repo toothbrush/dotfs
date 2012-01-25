@@ -48,7 +48,7 @@ processConfig path fd = case parse configFile path fd of
 
 present :: (String, String) -> ConfigFile
 present ("", body)     = Vanilla body
-present (header, body) = Special [Setting "" header] [FreeText body]
+present (header, body) = Special [header := Con (S "")] [FreeText body]
 
 
 configFile :: Parser (String, String)
