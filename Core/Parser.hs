@@ -5,31 +5,37 @@ import Text.Parsec.String
 import Text.Parsec.Error
 import Text.Parsec.Token
 import Text.Parsec.Language
+import Text.ParserCombinators.Parsec.Combinator ()
 
 
 import Core.Datatypes
 
 processConfig :: FilePath -> String -> String
 processConfig path fd = case parse mainParseConfig path fd of
-                            Left err -> concatMap messageString (errorMessages err)
-                            Right cf -> show cf
+                            Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
+                            Right cf -> "parse = \n" ++ show cf
 
 
 
--- headersep = do
---             string "\n"
---             manyTill (string "-") (string "\n")
---
--- header = do
---             (manyTill anyChar (try headersep))
+headersep :: Parser String
+headersep = do
+            char '\n'
+            manyTill (char '-') (char '\n')
 
-configFile = do
-                    --h <- header
+
+hdr :: Parser String
+hdr = (manyTill anyChar (try headersep))
+
+configFile :: Parser ConfigFile
+configFile = do  (do
+                    h <- hdr
                     rest <- many1 anyChar
-                    return $ Special "blank header" [FreeText rest]
-                --   <|>
-                --   (
-                --   rest <- anyChar)
+                    return $ Special h [FreeText rest]
+                       )
+                 <|>
+                 (do
+                     rest <- many1 anyChar
+                     return $ Vanilla rest)
 
 
 
