@@ -14,33 +14,3 @@ data DotFS = DotFS {
 instance Eq DotFS where
   (==) x y = dotfsEntryName x == dotfsEntryName y
 
-data Conf = C FilePath deriving Show
-
-
-data ConfigFile = Vanilla String
-                | Special Header Body
-
-type Body          = [Statement]
-type Header        = [Assign]
-
-data Assign = VariableName := Expr
-              deriving Show
-
-data Expr = Var String
-          | Con Constant
-          | Duo Duop Expr Expr
-          deriving Show
-
-data Duop = And | Iff deriving Show
-
-data Constant = S String
-              | I Integer
-              | B Bool
-              deriving Show
-
-type VariableName  = String
-
-data Statement = FreeText String
-               | If Expr Body
-               | VarRef VariableName
-               deriving Show
