@@ -1,5 +1,7 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module Core.Parser where
 
+import Prelude hiding (lex)
 import Core.Datatypes
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
@@ -14,20 +16,53 @@ import Text.Parsec.Language
 import Text.Parsec.Expr
 
 -- stuff about the language and the default lexer
+tagletter = oneOf "~!@#$%^&*()_+|`-=\\{}:\"<>?[];',./"
+
 lang :: LanguageDef st
 lang = javaStyle
      { reservedNames = ["commentstyle","tagstyle","if","else"]
-     , opStart = opLetter headerLang
-     , opLetter = oneOf "~!@#$%^&*()_+|`-=\\{}[]:;'<>?,./" -- only used to parse tagsdefs
-     , reservedOpNames = [""]                -- things that cannot be the tags-delimiters
      , caseSensitive = True
+     , opStart = tagletter
+     , opLetter = tagletter
      }
 
-tp = P.makeTokenParser lang
+lex = P.makeTokenParser lang
+
+-- alterantive lexer for style definitions
+styleLang :: LanguageDef st
+styleLang = emptyDef
+          { opStart  = tagletter
+          , opLetter = tagletter }
+
+styleLex = P.makeTokenParser styleLang
 
 -- first pass:
 
-headerP :: Parser Header
+-- parse the header, no whitespace around it is eaten
+headerP:: Parser Header
+headerP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
+
+-- parse an assignment
+assignmentP :: Parser Assignment
+assignmentP =  try tagstyleP
+           <|> try commentstyleP
+
+-- we must prevent comment tags from being ignored by the lexer,
+-- so use the default lexer here intead that has no comments
+tagstyleP,commentstyleP :: Parser Assignment
+tagstyleP = TagStyle <$  symbol lex "tagstyle"
+                     <*  symbol styleLex "="
+                     <*> operator styleLex
+                     <*  symbol styleLex "tag"
+                     <*> operator lex
+commentstyleP = CommentStyle <$  symbol lex "commentstyle"
+                             <*  symbol styleLex "="       -- don't eat comment tags
+                             <*> operator styleLex         -- don't
+                             <*  symbol styleLex "comment" -- don't
+                             <*> operator lex              -- after this you can ignore additional comments
+
+
+
 
 
 
