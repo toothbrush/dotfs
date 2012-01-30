@@ -26,10 +26,10 @@ data Assignment = forall a. Show a => Assign Var (Expr a)
                 | CommentStyle String String
 
 instance Show Assignment where
-    show (Assign v e)         = (show v)++" <- "++(show e)
-    show (Execute v c)        = (show v)++" <= "++(show c)
-    show (TagStyle s1 s2)     = s1++"tag"++s2
-    show (CommentStyle s1 s2) = s1++"comment"++s2
+    show (Assign v e)         = (show v)++" <- "++(show e)++"\n"
+    show (Execute v c)        = (show v)++" <= "++(show c)++"\n"
+    show (TagStyle s1 s2)     = "new tag style: "++s1++" tag "++s2++"\n"
+    show (CommentStyle s1 s2) = "new comment style: "++s1++" comment "++s2++"\n"
 
 data Expr a where
          -- constants
