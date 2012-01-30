@@ -27,7 +27,6 @@ data Assignment = forall a. Show a => Assign Var (Expr a)
 
 instance Show Assignment where
     show (Assign v e)         = (show v)++" <- "++(show e)++"\n"
-    show (Execute v c)        = (show v)++" <= "++(show c)++"\n"
     show (TagStyle s1 s2)     = "new tag style: "++s1++" tag "++s2++"\n"
     show (CommentStyle s1 s2) = "new comment style: "++s1++" comment "++s2++"\n"
 
@@ -36,6 +35,7 @@ data Expr a where
          Int    :: Int -> Expr Int
          Bool   :: Bool -> Expr Bool
          String :: String -> Expr String
+         Exec   :: String -> Expr String
          -- int operators
          Add    :: Expr Int -> Expr Int -> Expr Int
     --     Sub    :: Expr Int -> Expr Int -> Expr Int
