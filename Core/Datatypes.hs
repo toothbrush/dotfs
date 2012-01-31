@@ -36,17 +36,17 @@ data Expr a where
          Bool   :: Bool -> Expr Bool
          String :: String -> Expr String
          Exec   :: String -> Expr String
-         -- int operators
-         Add    :: Expr Int -> Expr Int -> Expr Int
+         -- int operators:
+         Add    :: Num a => Expr a -> Expr a -> Expr a
     --     Sub    :: Expr Int -> Expr Int -> Expr Int
 --         Mul    :: Expr Int -> Expr Int -> Expr Int
 --         Div    :: Expr Int -> Expr Int -> Expr Int
-         -- string operators
---         Con    :: Expr String -> Expr String -> Expr String
+         -- string operators: todo: make a class foir this stuff
+--         Con    :: Show a => Expr String -> Expr a -> Expr String
          -- comparators
-         Eq     :: Expr a -> Expr a -> Expr Bool
+         Eq     :: Eq a => Expr a -> Expr a -> Expr Bool
 --         Neq    :: Expr a -> Expr a -> Expr Bool
-         Gt     :: Expr Int -> Expr Int -> Expr Bool
+         Gt     :: Ord a => Expr a -> Expr a -> Expr Bool
          -- boolean operators
          And    :: Expr Bool -> Expr Bool -> Expr Bool
 --         Or     :: Expr Bool -> Expr Bool -> Expr Bool
