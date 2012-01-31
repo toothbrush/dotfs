@@ -62,6 +62,51 @@ commentstyleP = CommentStyle <$  symbol lex "commentstyle"
                              <*> operator lex              -- after this you can ignore additional comments
 
 
+-- the parser for expressions
+intExprP :: Parser (Expr Int)
+intExprP = buildExpressionParser table prim <?> "expression"
+      where inf s f a = Infix   (do{ symbol lex s; return f }) a
+            pre s f   = Prefix  (do{ symbol lex s; return f })
+            post s f  = Postfix (do{ symbol lex s; return f })
+            table= [[ inf "*" Mul AssocLeft , inf "/" Div AssocLeft ]
+                   ,[ inf "+" Add AssocLeft , inf "-" Sub AssocLeft ]
+                   ]
+            prim =  parens lex (intExprP)
+                <|> Int . fromInteger <$> integer lex
+                <|> varP
+                <|> ifP
+
+
+
+
+-- this works? and v is of type Variable a, how is that typesafe?
+test = case parse varP "" "test" of
+          Right v -> v
+          Left err -> "faal"
+
+
+
+
+-- some helpers
+varP :: Parser (Expr a)
+varP = Var <$> identifier lex
+
+ifP :: Parser (Expr a)
+ifP = If <$  symbol lex "if"
+         <*  symbol lex "("
+         <*> intExprP
+         <*  symbol lex ")"
+         <*  symbol lex "{"
+         <*> intExprP
+         <*  symbol lex "}"
+         <*  symbol lex "{"
+         <*> intExprP
+         <*  symbol lex "}"
+
+
+
+
+
 
 
 
