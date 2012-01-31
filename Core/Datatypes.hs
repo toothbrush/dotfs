@@ -17,11 +17,11 @@ instance Eq DotFS where
 
 
 -- Types for parsed stuff
-type Var    = String
+type Variable a = String
 type Header = [Assignment]
 
-data Assignment = forall a. Show a => Assign Var (Expr a)
-                | Execute Var String
+data Assignment = forall a. Show a => Assign (Variable a) (Expr a)
+                | Execute (Variable String) String
                 | TagStyle String String
                 | CommentStyle String String
 
@@ -36,32 +36,37 @@ data Expr a where
          Bool   :: Bool -> Expr Bool
          String :: String -> Expr String
          Exec   :: String -> Expr String
+         Var    :: Variable a -> Expr a
          -- int operators:
          Add    :: Num a => Expr a -> Expr a -> Expr a
-    --     Sub    :: Expr Int -> Expr Int -> Expr Int
---         Mul    :: Expr Int -> Expr Int -> Expr Int
---         Div    :: Expr Int -> Expr Int -> Expr Int
+         Sub    :: Expr Int -> Expr Int -> Expr Int
+         Mul    :: Expr Int -> Expr Int -> Expr Int
+         Div    :: Expr Int -> Expr Int -> Expr Int
          -- string operators: todo: make a class foir this stuff
 --         Con    :: Show a => Expr String -> Expr a -> Expr String
          -- comparators
-         Eq     :: Eq a => Expr a -> Expr a -> Expr Bool
+--         Eq     :: Eq a => Expr a -> Expr a -> Expr Bool
 --         Neq    :: Expr a -> Expr a -> Expr Bool
-         Gt     :: Ord a => Expr a -> Expr a -> Expr Bool
+--         Gt     :: Ord a => Expr a -> Expr a -> Expr Bool
          -- boolean operators
-         And    :: Expr Bool -> Expr Bool -> Expr Bool
+--         And    :: Expr Bool -> Expr Bool -> Expr Bool
 --         Or     :: Expr Bool -> Expr Bool -> Expr Bool
 --       -- conditonal
-         If     :: Expr Bool -> Expr a -> Expr a -> Expr a
+--         If     :: Expr Bool -> Expr a -> Expr a -> Expr a
 
 instance Show (Expr a) where
     show (Int i)     = show i
     show (Bool b)    = show b
     show (String s)  = show s
+    show (Var v)     = show v
     show (Add i1 i2) = (show i1)++"+"++(show i2)
-    show (Eq e1 e2)  = (show e1)++"+"++(show e2)
-    show (Gt i1 i2)  = (show i1)++">"++(show i2)
-    show (And b1 b2) = (show b1)++"&&"++(show b2)
-    show (If c i e)  = "if("++(show c)++"){"++(show i)++"}{"++(show e)++"}"
+    show (Sub i1 i2) = (show i1)++"-"++(show i2)
+    show (Mul i1 i2) = (show i1)++"*"++(show i2)
+    show (Div i1 i2) = (show i1)++"/"++(show i2)
+--    show (Eq e1 e2)  = (show e1)++"+"++(show e2)
+--    show (Gt i1 i2)  = (show i1)++">"++(show i2)
+--    show (And b1 b2) = (show b1)++"&&"++(show b2)
+--    show (If c i e)  = "if("++(show c)++"){"++(show i)++"}{"++(show e)++"}"
 
 
 
