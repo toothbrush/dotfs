@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, GADTs, EmptyDataDecls, KindSignatures, ExistentialQuantification #-}
 module Core.Parser where
 
 import Prelude hiding (lex)
@@ -44,8 +44,11 @@ headerP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
 
 -- parse an assignment
 assignmentP :: Parser Assignment
-assignmentP =  try tagstyleP
+assignmentP = ( try tagstyleP
            <|> try commentstyleP
+           <|> try boolAssignP
+           <|> try intAssignP ) <* optional ( symbol lex ";" )
+
 
 -- we must prevent comment tags from being ignored by the lexer,
 -- so use the default lexer here intead that has no comments
@@ -62,16 +65,35 @@ commentstyleP = CommentStyle <$  symbol lex "commentstyle"
                              <*> operator lex              -- after this you can ignore additional comments
 
 
+intAssignP :: Parser Assignment
+intAssignP = Assign <$> identifier lex
+                    <*  symbol lex "="
+                    <*> intExprP
+boolAssignP :: Parser Assignment
+boolAssignP = Assign <$> identifier lex
+                     <*  symbol lex "="
+                     <*> boolExprP
+
+
+-- to factor out some common basics
+nestExprP :: Parser (Expr a) -> Parser (Expr a)
+nestExprP inner =  varP     -- <- ok this should not be here, but for now this is kinda convenient
+               <|> parens lex inner
+               <|> mkIfP inner
+               <|> mkMediumIfP inner
+
+
 -- the parser for integer expressions
 intExprP :: Parser (Expr Int)
 intExprP = buildExpressionParser table prim <?> "integer expression"
       where table = [[ inf "*" Mul AssocLeft , inf "/" Div AssocLeft ]
                     ,[ inf "+" Add AssocLeft , inf "-" Sub AssocLeft ]
                     ]                           -- an int expression can be:
-            prim =  parens lex (intExprP)                -- parens with int inside
-                <|> varP                                 -- variable
-                <|> mkIfP intExprP                       -- if-statement of other int-exprs
-                <|> mkMediumIfP intExprP                 -- alternate if syntax
+--            prim =  parens lex (intExprP)                -- parens with int inside
+--                <|> varP                                 -- variable
+--                <|> mkIfP intExprP                       -- if-statement of other int-exprs
+--                <|> mkMediumIfP intExprP                 -- alternate if syntax
+            prim = nestExprP intExprP
                 <|> Int . fromInteger <$> integer lex    -- a constant number
 
 
@@ -82,16 +104,18 @@ boolExprP = buildExpressionParser table prim <?> "boolean expression"
                     ,[ inf "&&" And AssocNone ]
                     ,[ inf "||" Or AssocNone ]
                     ]                       -- a boolean expression can be:
-            prim =  parens lex boolExprP                  -- parens with bool inside
-                <|> varP                                  -- variable
+            prim = try( nestExprP boolExprP )
+--            prim =  parens lex boolExprP                  -- parens with bool inside
+--                <|> varP                                  -- variable
                 <|> Bool True  <$ symbol lex "true"       -- constant true
                 <|> Bool False <$ symbol lex "false"      -- constant false
                 <|> mkCompP intExprP                      -- comparator of integers
-                <|> mkIfP boolExprP                       -- if statements of bools
-                <|> mkMediumIfP boolExprP                 -- and the alternate syntax again
+--                <|> mkIfP boolExprP                       -- if statements of bools
+--                <|> mkMediumIfP boolExprP                 -- and the alternate syntax again
 
 
-
+anyExprP :: Parser (Expr Bool)
+anyExprP = varP <|> boolExprP
 
 
 
