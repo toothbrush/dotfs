@@ -38,21 +38,25 @@ data Expr a where
          Exec   :: String -> Expr String
          Var    :: Variable a -> Expr a
          -- int operators:
-         Add    :: Num a => Expr a -> Expr a -> Expr a
+         Add    :: Expr Int -> Expr Int -> Expr Int
          Sub    :: Expr Int -> Expr Int -> Expr Int
          Mul    :: Expr Int -> Expr Int -> Expr Int
          Div    :: Expr Int -> Expr Int -> Expr Int
+         -- boolean operators:
+         And    :: Expr Bool -> Expr Bool -> Expr Bool
+         Or     :: Expr Bool -> Expr Bool -> Expr Bool
+         Not    :: Expr Bool -> Expr Bool
          -- string operators:
          Con    :: Show a => Expr String -> Expr a -> Expr String
          -- comparators:
          Eq     :: Eq a => Expr a -> Expr a -> Expr Bool
-         Neq    :: Expr a -> Expr a -> Expr Bool
+         Neq    :: Eq a => Expr a -> Expr a -> Expr Bool
          Gt     :: Ord a => Expr a -> Expr a -> Expr Bool
-         -- boolean operators:
-         And    :: Expr Bool -> Expr Bool -> Expr Bool
-         Or     :: Expr Bool -> Expr Bool -> Expr Bool
+         Lt     :: Ord a => Expr a -> Expr a -> Expr Bool
+         Gte    :: Ord a => Expr a -> Expr a -> Expr Bool
+         Lte    :: Ord a => Expr a -> Expr a -> Expr Bool
          -- conditonal: temporarily: the condition is an integer!!!!!!!!!
-         If     :: Expr Int -> Expr a -> Expr a -> Expr a
+         If     :: Expr Bool -> Expr a -> Expr a -> Expr a
 
 instance Show (Expr a) where
     show (Int i)     = show i
@@ -64,9 +68,15 @@ instance Show (Expr a) where
     show (Sub i1 i2) = '(':(show i1)++"-"++(show i2)++")"
     show (Mul i1 i2) = '(':(show i1)++"*"++(show i2)++")"
     show (Div i1 i2) = '(':(show i1)++"/"++(show i2)++")"
---    show (Eq e1 e2)  = (show e1)++"+"++(show e2)
---    show (Gt i1 i2)  = (show i1)++">"++(show i2)
---    show (And b1 b2) = (show b1)++"&&"++(show b2)
+    show (And b1 b2) = '(':(show b1)++" and "++(show b2)++")"
+    show (Or b1 b2)  = '(':(show b1)++" or "++(show b2)++")"
+    show (Not b)     = "not( "++(show b)++" )"
+    show (Eq e1 e2)  = (show e1)++"=="++(show e2)
+    show (Neq e1 e2) = (show e1)++"!="++(show e2)
+    show (Gt i1 i2)  = (show i1)++">"++(show i2)
+    show (Lt i1 i2)  = (show i1)++"<"++(show i2)
+    show (Gte i1 i2) = (show i1)++">="++(show i2)
+    show (Lte i1 i2)= (show i1)++"<="++(show i2)
     show (If c i e)  = "if("++(show c)++"){"++(show i)++"}{"++(show e)++"}"
 
 -- something about names and variables

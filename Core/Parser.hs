@@ -62,28 +62,44 @@ commentstyleP = CommentStyle <$  symbol lex "commentstyle"
                              <*> operator lex              -- after this you can ignore additional comments
 
 
--- the parser for expressions
+-- the parser for integer expressions
 intExprP :: Parser (Expr Int)
-intExprP = buildExpressionParser table prim <?> "expression"
-      where inf s f a = Infix   (do{ symbol lex s; return f }) a
-            pre s f   = Prefix  (do{ symbol lex s; return f })
-            post s f  = Postfix (do{ symbol lex s; return f })
-            table= [[ inf "*" Mul AssocLeft , inf "/" Div AssocLeft ]
-                   ,[ inf "+" Add AssocLeft , inf "-" Sub AssocLeft ]
-                   ]
-            prim =  parens lex (intExprP)
-                <|> Int . fromInteger <$> integer lex
-                <|> varP
-                <|> ifP
+intExprP = buildExpressionParser table prim <?> "integer expression"
+      where table = [[ inf "*" Mul AssocLeft , inf "/" Div AssocLeft ]
+                    ,[ inf "+" Add AssocLeft , inf "-" Sub AssocLeft ]
+                    ]                           -- an int expression can be:
+            prim =  parens lex (intExprP)                -- parens with int inside
+                <|> varP                                 -- variable
+                <|> mkIfP intExprP                       -- if-statement of other int-exprs
+                <|> mkMediumIfP intExprP                 -- alternate if syntax
+                <|> Int . fromInteger <$> integer lex    -- a constant number
+
+
+-- the parser for boolean expressions
+boolExprP :: Parser (Expr Bool)
+boolExprP = buildExpressionParser table prim <?> "boolean expression"
+      where table = [[ pre "!" Not ]
+                    ,[ inf "&&" And AssocNone ]
+                    ,[ inf "||" Or AssocNone ]
+                    ]                       -- a boolean expression can be:
+            prim =  parens lex boolExprP                  -- parens with bool inside
+                <|> varP                                  -- variable
+                <|> Bool True  <$ symbol lex "true"       -- constant true
+                <|> Bool False <$ symbol lex "false"      -- constant false
+                <|> mkCompP intExprP                      -- comparator of integers
+                <|> mkIfP boolExprP                       -- if statements of bools
+                <|> mkMediumIfP boolExprP                 -- and the alternate syntax again
 
 
 
 
--- this works? and v is of type Variable a, how is that typesafe?
-test = case parse varP "" "test" of
-          Right v -> v
-          Left err -> "faal"
 
+
+-- the tricky thing with short if statements is
+--  that the boolean expression can start with a comparator
+--  that starts with an integer, which can be another short if statemt...
+--  I do not (yet) know how to handle this recursion.
+--  
 
 
 
@@ -91,22 +107,40 @@ test = case parse varP "" "test" of
 varP :: Parser (Expr a)
 varP = Var <$> identifier lex
 
-ifP :: Parser (Expr a)
-ifP = If <$  symbol lex "if"
-         <*  symbol lex "("
-         <*> intExprP
-         <*  symbol lex ")"
-         <*  symbol lex "{"
-         <*> intExprP
-         <*  symbol lex "}"
-         <*  symbol lex "{"
-         <*> intExprP
-         <*  symbol lex "}"
+-- the ifP parser generators create a parser of ifstatements of the given type
+mkIfP,mkShortIfP,mkMediumIfP :: Parser (Expr a) -> Parser (Expr a)
+mkIfP p = If <$  symbol lex "if"
+             <*  symbol lex "("
+             <*> boolExprP
+             <*  symbol lex ")"
+             <*  symbol lex "{"
+             <*> p
+             <*  symbol lex "}"
+             <*  symbol lex "{"
+             <*> p
+             <*  symbol lex "}"
+
+mkShortIfP p = If <$> boolExprP
+                  <*  symbol lex "?"
+                  <*> p
+                  <*  symbol lex ":"
+                  <*> p
+
+mkMediumIfP p = If <$  symbol lex "?"
+                   <*> boolExprP
+                   <*> p
+                   <*> p
+
+mkCompP :: Ord a => Parser (Expr a) -> Parser (Expr Bool)
+mkCompP p =  Eq  <$> p <* symbol lex "==" <*> p
+         <|> Neq <$> p <* symbol lex "!=" <*> p
+         <|> Gt  <$> p <* symbol lex ">"  <*> p
+         <|> Lt  <$> p <* symbol lex "<"  <*> p
+         <|> Gte <$> p <* symbol lex ">=" <*> p
+         <|> Lte <$> p <* symbol lex "<=" <*> p
 
 
-
-
-
-
-
-
+-- helpers for easy expression parser table generation
+inf s f a = Infix   (do{ symbol lex s; return f }) a
+pre s f   = Prefix  (do{ symbol lex s; return f })
+post s f  = Postfix (do{ symbol lex s; return f })
