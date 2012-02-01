@@ -154,6 +154,7 @@ mkMediumIfP p = If <$  symbol lex "?"
                    <*> p
                    <*> p
 
+-- a combinator that generates a boolean parser
 mkCompP :: Ord a => Parser (Expr a) -> Parser (Expr Bool)
 mkCompP p =  Eq  <$> p <* symbol lex "==" <*> p
          <|> Neq <$> p <* symbol lex "!=" <*> p
