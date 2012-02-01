@@ -36,6 +36,14 @@ process inp = case parse splitter "split" inp of
 
 
 
+evaluate :: Header -> VarList
+evaluate (TagStyle _ _:rest) = evaluate rest
+evaluate (CommentStyle _ _:rest) = evaluate rest
+evaluate (Execute name cmd:rest) =  undefined
+evaluate (Assign name val:rest) = undefined
+
+
+
 
 
 

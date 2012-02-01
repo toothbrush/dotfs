@@ -86,5 +86,13 @@ instance Show (Expr a) where
 
 
 
+-- tapes for evaluated stuff
+data VarList = VarList {
+        ints :: [(String,Int)],
+        bools :: [(String,Bool)],
+        strings :: [(String,String)]   }
+
+
+
 
 
