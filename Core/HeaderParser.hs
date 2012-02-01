@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, GADTs, EmptyDataDecls, KindSignatures, ExistentialQuantification #-}
-module Core.Parser where
+module Core.HeaderParser where
 
 import Prelude hiding (lex)
 import Core.Datatypes
@@ -39,8 +39,8 @@ styleLex = P.makeTokenParser styleLang
 -- first pass:
 
 -- parse the header, no whitespace around it is eaten
-headerP:: Parser Header
-headerP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
+dotfsP:: Parser Header
+dotfsP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
 
 -- parse an assignment
 assignmentP :: Parser Assignment
