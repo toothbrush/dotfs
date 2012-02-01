@@ -65,6 +65,7 @@ commentstyleP = CommentStyle <$  symbol lex "commentstyle"
                              <*> operator lex              -- after this you can ignore additional comments
 
 
+-- ok, this is the ugly code duplication part i was talking about
 intAssignP :: Parser Assignment
 intAssignP = Assign <$> identifier lex
                     <*  symbol lex "="
@@ -114,8 +115,6 @@ boolExprP = buildExpressionParser table prim <?> "boolean expression"
 --                <|> mkMediumIfP boolExprP                 -- and the alternate syntax again
 
 
-anyExprP :: Parser (Expr Bool)
-anyExprP = varP <|> boolExprP
 
 
 
