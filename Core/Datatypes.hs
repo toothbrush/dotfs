@@ -12,6 +12,8 @@ data DotFS = DotFS {
   }
  deriving Show
 
+data Conf = C FilePath deriving Show
+
 instance Eq DotFS where
   (==) x y = dotfsEntryName x == dotfsEntryName y
 

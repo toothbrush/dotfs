@@ -33,11 +33,11 @@ splitter = try ( (\a b c->(b,a++c)) <$> manyTill anyChar (lookAhead (string "<<d
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
 testfile name = do fc <- readFile name
-                   putStrLn $ process fc
+                   putStrLn $ process name fc
 
 -- run the header parser and evauator, and then the body parser on the result
-process :: String -> String
-process inp = case parse splitter "split" inp of
+process :: FilePath -> String -> String
+process file inp = case parse splitter "split" inp of
               Left err -> "error = \n" ++show (errorPos err) ++ "\n"
               -- TODO: use the result of evaluate head (which can tell us commentStyle etc
               -- to parse the body. I propose using a line-by-line regex to match

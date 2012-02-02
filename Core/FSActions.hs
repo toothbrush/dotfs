@@ -3,7 +3,7 @@ module Core.FSActions where
 import Core.Datatypes
 import Util.Debug
 import Core.Constants
-import Core.Parser
+import Core.Parsers
 
 import qualified Data.ByteString.Char8 as B
 import System.Posix.Types
@@ -54,7 +54,7 @@ getStats entrytype uri = do
     Directory -> do return $ fileSize status
     RegularFile -> do
       fd <- readFile uri
-      let parsed = processConfig uri fd
+      let parsed = process uri fd
       return $ fromIntegral (length parsed)
   return DotFS {
       dotfsEntryName   = takeFileName uri
@@ -156,7 +156,7 @@ dotfsOpen dirs (_:path) ReadOnly flags = do
       -- at this point load and parse the file.
       fd <- readFile (dotfsActualPath f)
 
-      let parsed = processConfig path fd
+      let parsed = process path fd
       return (Right parsed)
     Nothing -> return (Left eNOENT)
 dotfsOpen dirs (_:path) mode flags = return (Left eACCES)
