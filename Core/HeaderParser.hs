@@ -26,7 +26,7 @@ dotfsP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
 
 -- parse an assignment
 assignmentP :: Parser Assignment
-assignmentP = ( try tagstyleP
+assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try boolAssignP
            <|> try intAssignP ) <* optional ( symbol lex ";" )

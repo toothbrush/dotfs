@@ -5,6 +5,7 @@ import Core.HeaderParser (dotfsP)
 import Core.HelperParsers
 import Core.Lexers
 import Core.ExpressionParsers
+import Core.BodyParser
 import Core.ExpressionEvaluator
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
@@ -16,6 +17,10 @@ import Text.Parsec.Char
 import Text.Parsec.Prim
 --import Text.Parsec.Language
 --import Text.Parsec.Expr
+
+import Text.Regex.Posix
+
+import Util.Helpers
 
 -- parse the header and return the body untouched
 splitter :: Parser (Header,String)
@@ -35,8 +40,12 @@ process :: String -> String
 process inp = case parse splitter "split" inp of
               Left err -> "error = \n" ++show (errorPos err) ++ "\n"
               -- TODO: use the result of evaluate head (which can tell us commentStyle etc
-              -- to parse the body.
-              Right (head,body) -> show (evaluate head,body)
+              -- to parse the body. I propose using a line-by-line regex to match
+              -- on variable usage [[varname]] or [[if varname]] or [[fi]]
+              -- then postprocessing. probably not the cleanest, but whatever.
+              Right (head,plainbody) -> do let pat = "\\[\\[([a-zA-Z]+)\\]\\]" -- TODO more allowed characters, not starting with a 0, etc.
+                                           let res = plainbody =~ pat :: (String,String,String,[String])
+                                           "list of matched variables: " ++ show (lst4 res)
 
 
 
