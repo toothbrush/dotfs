@@ -86,11 +86,13 @@ instance Show (Expr a) where
 
 
 
--- tapes for evaluated stuff
-data VarList = VarList {
-        ints :: [(String,Int)],
-        bools :: [(String,Bool)],
-        strings :: [(String,String)]   }
+-- types for evaluated stuff
+type VarList = [(VarKey,VarValue)]
+type VarKey  = String
+data VarValue = IntVal Int
+              | BoolVal Bool
+              | StringVal String
+              deriving Show
 
 
 
