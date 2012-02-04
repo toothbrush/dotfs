@@ -18,7 +18,7 @@ import Text.Parsec.Expr
 
 
 -- new combinator: (source: http://www.haskell.org/pipermail/beginners/2010-January/003123.html)
-many1Till :: Show end => Parser a -> Parser end -> Parser [a]
+many1Till :: Show end => VarParser a -> VarParser end -> VarParser [a]
 many1Till p end = do notFollowedBy' end
                      p1 <- p
                      ps <- manyTill p end

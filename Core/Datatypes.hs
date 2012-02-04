@@ -2,6 +2,9 @@
 module Core.Datatypes where
 
 import System.Fuse
+import Text.Parsec
+import Text.ParserCombinators.Parsec.Prim
+import Data.HashMap
 
 data DotFS = DotFS {
     dotfsEntryName     :: FilePath
@@ -96,6 +99,15 @@ data VarValue = IntVal Int
               | StringVal String
               deriving Show
 
+
+
+-- our threaded parser type
+type VarParser a = GenParser Char DFSState a
+type Varname = String
+type DFSState = Map Varname Value
+data Value = VInt Int
+            | VBool Bool
+            | VString String
 
 
 

@@ -16,16 +16,18 @@ import Text.Parsec.Token as P
 import Text.Parsec.Prim
 import Text.Parsec.Language
 import Text.Parsec.Expr
+import Data.HashMap
+
 
 
 -- first pass:
 
 -- parse the header, no whitespace around it is eaten
-dotfsP:: Parser Header
+dotfsP:: VarParser Header
 dotfsP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
 
 -- parse an assignment
-assignmentP :: Parser Assignment
+assignmentP :: VarParser Assignment
 assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try boolAssignP
@@ -34,7 +36,7 @@ assignmentP = (try tagstyleP
 
 -- we must prevent comment tags from being ignored by the lexer,
 -- so use the default lexer here intead that has no comments
-tagstyleP,commentstyleP :: Parser Assignment
+tagstyleP,commentstyleP :: VarParser Assignment
 tagstyleP = TagStyle <$  symbol lex "tagstyle"
                      <*  symbol styleLex "="
                      <*> operator styleLex
@@ -48,11 +50,11 @@ commentstyleP = CommentStyle <$  symbol lex "commentstyle"
 
 
 -- ok, this is the ugly code duplication part i was talking about
-intAssignP :: Parser Assignment
+intAssignP :: VarParser Assignment
 intAssignP = Assign <$> identifier lex
                     <*  symbol lex "="
                     <*> intExprP
-boolAssignP :: Parser Assignment
+boolAssignP :: VarParser Assignment
 boolAssignP = Assign <$> identifier lex
                      <*  symbol lex "="
                      <*> boolExprP

@@ -19,7 +19,7 @@ import Text.Parsec.Expr
 
 
 -- to factor out some common basics
-nestExprP :: Parser (Expr a) -> Parser (Expr a)
+nestExprP :: VarParser (Expr a) -> VarParser (Expr a)
 nestExprP inner =  varP     -- <- ok this should not be here, but for now this is kinda convenient
                <|> parens lex inner
                <|> mkIfP inner
@@ -27,7 +27,7 @@ nestExprP inner =  varP     -- <- ok this should not be here, but for now this i
 
 
 -- the parser for integer expressions
-intExprP :: Parser (Expr Int)
+intExprP :: VarParser (Expr Int)
 intExprP = buildExpressionParser table prim <?> "integer expression"
       where table = [[ inf "*" Mul AssocLeft , inf "/" Div AssocLeft ]
                     ,[ inf "+" Add AssocLeft , inf "-" Sub AssocLeft ]
@@ -41,7 +41,7 @@ intExprP = buildExpressionParser table prim <?> "integer expression"
 
 
 -- the parser for boolean expressions
-boolExprP :: Parser (Expr Bool)
+boolExprP :: VarParser (Expr Bool)
 boolExprP = buildExpressionParser table prim <?> "boolean expression"
       where table = [[ pre "!" Not ]
                     ,[ inf "&&" And AssocNone ]
@@ -69,11 +69,11 @@ boolExprP = buildExpressionParser table prim <?> "boolean expression"
 
 
 -- some helpers
-varP :: Parser (Expr a)
+varP :: VarParser (Expr a)
 varP = Var <$> identifier lex
 
 -- the ifP parser generators create a parser of ifstatements of the given type
-mkIfP,mkShortIfP,mkMediumIfP :: Parser (Expr a) -> Parser (Expr a)
+mkIfP,mkShortIfP,mkMediumIfP :: VarParser (Expr a) -> VarParser (Expr a)
 mkIfP p = If <$  symbol lex "if"
              <*  symbol lex "("
              <*> boolExprP
@@ -97,7 +97,7 @@ mkMediumIfP p = If <$  symbol lex "?"
                    <*> p
 
 -- a combinator that generates a boolean parser
-mkCompP :: Ord a => Parser (Expr a) -> Parser (Expr Bool)
+mkCompP :: Ord a => VarParser (Expr a) -> VarParser (Expr Bool)
 mkCompP p =  Eq  <$> p <* symbol lex "==" <*> p
          <|> Neq <$> p <* symbol lex "!=" <*> p
          <|> Gt  <$> p <* symbol lex ">"  <*> p
