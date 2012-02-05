@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, GADTs, EmptyDataDecls, KindSignatures, ExistentialQuantification #-}
+{-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
 module Core.ExpressionParsers where
 
 import Prelude hiding (lex,lookup)
@@ -96,9 +96,7 @@ mkIfP p = do{ symbol lex "if"
             ; symbol lex "{"
             ; r2 <- p
             ; symbol lex "}"
-            ; return $ case cond of
-                            True -> r1
-                            False -> r2 
+            ; return $ if cond then r1 else r2
             }
 
 
@@ -116,6 +114,6 @@ mkCompP p =  try ((==) <$> p <* symbol lex "==" <*> p)
 
 
 -- helpers for easy expression parser table generation
-inf s f a = Infix   (do{ symbol lex s; return f }) a
+inf s f   = Infix   (do{ symbol lex s; return f })
 pre s f   = Prefix  (do{ symbol lex s; return f })
-post s f  = Postfix (do{ symbol lex s; return f }) 
+post s f  = Postfix (do{ symbol lex s; return f })

@@ -27,12 +27,12 @@ printHelp _ = do
   hPutStrLn stderr "Usage:"
   hPutStrLn stderr $ "\t"++prg++" mountpoint confdir homedir"
   hPutStrLn stderr (usageInfo prg options)
-  exitWith ExitSuccess
+  exitSuccess
 
 
 printVersion :: Options -> IO Options
 printVersion _ = do
   hPutStrLn stderr $ "Version " ++ version
-  exitWith ExitSuccess
+  exitSuccess
 
 

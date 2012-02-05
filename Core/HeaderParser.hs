@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, GADTs, EmptyDataDecls, KindSignatures, ExistentialQuantification #-}
+{-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
 module Core.HeaderParser where
 
 import Prelude hiding (lex)

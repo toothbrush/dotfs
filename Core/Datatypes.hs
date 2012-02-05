@@ -1,4 +1,4 @@
-{-#LANGUAGE GADTs, EmptyDataDecls, KindSignatures, ExistentialQuantification #-}
+{-#LANGUAGE GADTs, ExistentialQuantification #-}
 module Core.Datatypes where
 
 import System.Fuse

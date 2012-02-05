@@ -39,7 +39,7 @@ includeState p = do{ res <- p
                    } 
 
 -- parseTest adepted to accept an initial state
-parseTest p st inp = case (runParser (includeState p) st "" inp ) of
+parseTest p st inp = case runParser (includeState p) st "" inp of
                           (Left err) -> do{ putStr "parse error at "
                                           ; print err
                                           }

@@ -40,9 +40,7 @@ conditionalBlockP = do{ map <- getState
                       ; symbol lex (extractTagStart map)
                       ; symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
                       ; string (extractTagStop map)
-                      ; return $ case cond of
-                                      True -> content
-                                      False -> ""
+                      ; return $ if cond then content else ""
                       }
             
 exprBlockP :: VarParser String          
@@ -60,10 +58,9 @@ exprBlockP = do{ map <- getState
 
 verbBlockP :: VarParser String
 verbBlockP = do{ map <- getState
-               ; text <- let opentag = (\x->()) <$> string (extractTagStart map)
-                             enofVerb = lookAhead (eof <|> opentag)
-                         in many1Till anyChar enofVerb
-               ; return text
+               ; let opentag = const () <$> string (extractTagStart map)
+                     enofVerb = lookAhead (eof <|> opentag)
+                 in many1Till anyChar enofVerb
                }
 
 
@@ -77,10 +74,10 @@ anyExprP =  try (VInt <$> intExprP)
 
 
 -- helpers to retrieve start and stop tags as string from the state map:
-extractTagStart m = case (lookup "tagstart" m) of
+extractTagStart m = case lookup "tagstart" m of
                        Just (VString s) -> s
                        _                -> "<<"
-                       
-extractTagStop m = case (lookup "tagstop" m) of
+
+extractTagStop m = case lookup "tagstop" m of
                        Just (VString s) -> s
                        _                -> ">>"

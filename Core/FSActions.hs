@@ -51,7 +51,7 @@ getStats entrytype uri = do
                     return $ dirList ++ fileList
     RegularFile -> return []
   sz <- case entrytype of
-    Directory -> do return $ fileSize status
+    Directory -> return $ fileSize status
     RegularFile -> do
       fd <- readFile uri
       let parsed = process uri fd
