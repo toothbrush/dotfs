@@ -20,7 +20,7 @@ tagletter = oneOf "~!@#$%^&*()_+|`-=\\{}:\"<>?[];',./"
 
 lang :: LanguageDef st
 lang = javaStyle
-     { reservedNames = ["commentstyle","tagstyle","if","else"]
+     { reservedNames = ["commentstyle","tagstyle","if","else","true","false"]
      , caseSensitive = True
      , opStart = tagletter
      , opLetter = tagletter
