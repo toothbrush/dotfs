@@ -48,11 +48,12 @@ boolExprP = buildExpressionParser table prim <?> "boolean expression"
                     ,[ inf "&&" (&&) AssocNone ]
                     ,[ inf "||" (||) AssocNone ]
                     ]                       -- a boolean expression can be:
-            prim =  nestExprP boolExprP
-                <|> True  <$ symbol lex "true"       -- constant true
-                <|> False <$ symbol lex "false"      -- constant false
-                <|> boolVarP                                  -- variable
-                <|> mkCompP intExprP                      -- comparator of integers
+            prim =  try (nestExprP boolExprP)
+                <|> try (True  <$ symbol lex "true")       -- constant true
+                <|> try (False <$ symbol lex "false")      -- constant false
+			    <|> try (mkCompP intExprP)                 -- comparator of integers
+				<|> boolVarP                               -- variable
+                
 --                <|> mkIfP boolExprP                       -- if statements of bools
 --                <|> mkMediumIfP boolExprP                 -- and the alternate syntax again
 
@@ -135,12 +136,12 @@ mkMediumIfP p = If <$  symbol lex "?"
 
 -- a combinator that generates a boolean parser
 mkCompP :: Ord a => VarParser a -> VarParser Bool
-mkCompP p =  (==) <$> p <* symbol lex "==" <*> p
-         <|> (/=) <$> p <* symbol lex "!=" <*> p
-         <|> (>)  <$> p <* symbol lex ">"  <*> p
-         <|> (<)  <$> p <* symbol lex "<"  <*> p
-         <|> (>=) <$> p <* symbol lex ">=" <*> p
-         <|> (<=) <$> p <* symbol lex "<=" <*> p
+mkCompP p =  try ((==) <$> p <* symbol lex "==" <*> p)
+         <|> try ((/=) <$> p <* symbol lex "!=" <*> p)
+         <|> try ((>)  <$> p <* symbol lex ">"  <*> p)
+         <|> try ((<)  <$> p <* symbol lex "<"  <*> p)
+         <|> try ((>=) <$> p <* symbol lex ">=" <*> p)
+         <|> try ((<=) <$> p <* symbol lex "<=" <*> p)
 
 
 -- helpers for easy expression parser table generation
