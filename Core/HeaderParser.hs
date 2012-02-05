@@ -26,8 +26,8 @@ import Data.Map
 
 
 -- parse the header, no whitespace around it is eaten
-dotfsP:: VarParser ()
-dotfsP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
+headerP:: VarParser ()
+headerP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
 
 
 -- parse an assignment
