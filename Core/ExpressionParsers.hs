@@ -74,7 +74,14 @@ boolVarP = do{ name <- identifier lex
                             Nothing            -> fail $ "variable "++name++" is undefined"
              }
 
-
+stringVarP :: VarParser String
+stringVarP = do{ name <- identifier lex
+               ; map <- getState
+               ; case lookup name map of
+                      Just (VString s)   -> return s
+                      Just _             -> fail $ "variable "++name++" is not a string"
+                      Nothing            -> fail $ "variable "++name++" is undefined"
+               }
 
 
 -- the ifP parser generators create a parser of ifstatements of the given type
