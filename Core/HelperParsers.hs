@@ -31,7 +31,20 @@ many1Till p end = do notFollowedBy' end
 
 
 
+-- combinator that outputs the state tupled with the parse result
+includeState :: GenParser s st a -> GenParser s st (a,st)
+includeState p = do{ res <- p
+                   ; state <- getState
+                   ; return (res,state)
+                   } 
 
-
-
-
+-- parseTest adepted to accept an initial state
+parseTest p st inp = case (runParser (includeState p) st "" inp ) of
+                          (Left err) -> do{ putStr "parse error at "
+                                          ; print err
+                                          }
+                          (Right (x,state))  -> do{ putStr "result: "
+                                                  ; print x
+                                                  ; putStr "output state: "
+                                                  ; print state
+                                                  }

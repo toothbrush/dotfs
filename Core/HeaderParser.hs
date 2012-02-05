@@ -2,9 +2,11 @@
 module Core.HeaderParser where
 
 import Prelude hiding (lex)
+
 import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
+import Core.HelperParsers
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Control.Monad (join)
@@ -18,38 +20,26 @@ import Text.Parsec.Language
 import Text.Parsec.Expr
 import Data.Map
 
-includeState :: GenParser s st a -> GenParser s st (a,st)
-includeState p = do{ res <- p
-                   ; state <- getState
-                   ; return (res,state)
-                   } 
 
-parseTest p st inp = case (runParser (includeState p) st "" inp ) of
-                                                     (Left err) -> do{ putStr "parse error at "
-                                                                           ; print err
-                                                                           }
-                                                     (Right (x,state))  -> do{ putStr "result: "
-                                                                           ; print x
-                                                                           ; putStr "output state: "
-                                                                           ; print state
-                                                                           }
 
--- first pass:
+
+
 
 -- parse the header, no whitespace around it is eaten
-dotfsP:: VarParser [()]
-dotfsP = symbol lex "<<dotfs" *> many assignmentP <* string ">>"
+dotfsP:: VarParser ()
+dotfsP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
+
 
 -- parse an assignment
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try boolAssignState
-           <|>  intAssignState ) <* optional ( symbol lex ";" )
+           <|> intAssignState ) <* optional ( symbol lex ";" )
 
 
 -- we must prevent comment tags from being ignored by the lexer,
--- so use the default lexer here intead that has no comments
+-- so use the alternative lexer with great care
 tagstyleP,commentstyleP :: VarParser ()
 tagstyleP = do{ symbol lex "tagstyle" 
               ; symbol styleLex "="
@@ -60,11 +50,7 @@ tagstyleP = do{ symbol lex "tagstyle"
               ; updateState (insert "tagstop" (VString s2))
               ; return ()
               }
---tagstyleP = TagStyle <$  symbol lex "tagstyle"
---                     <*  symbol styleLex "="
---                     <*> operator styleLex
---                     <*  symbol styleLex "tag"
---                     <*> operator lex
+
 commentstyleP = do{ symbol lex "commentstyle" 
                   ; symbol styleLex "="
                   ; s1 <- operator styleLex
@@ -74,19 +60,9 @@ commentstyleP = do{ symbol lex "commentstyle"
                   ; updateState (insert "commentstop" (VString s2))
                   ; return ()
                   }
---commentstyleP = CommentStyle <$  symbol lex "commentstyle"
---                             <*  symbol styleLex "="       -- don't eat comment tags
---                             <*> operator styleLex         -- don't
---                             <*  symbol styleLex "comment" -- don't
---                             <*> operator lex              -- after this you can ignore additional comments
 
 
--- ok, this is the ugly code duplication part i was talking about
---intAssignP :: VarParser Assignment
---intAssignP = Assign <$> identifier lex
---                    --<*  symbol lex "="
---                    --<*> intExprP
-      
+-- statefull interger assignment parser      
 intAssignState :: VarParser ()
 intAssignState = do{ name <- identifier lex 
                    ; symbol lex "="
@@ -94,12 +70,8 @@ intAssignState = do{ name <- identifier lex
                    ; updateState (insert name (VInt val))
                    ; return ()
                    }              
-                    
---boolAssignP :: VarParser Bool
---boolAssignP = Assign <$> identifier lex
---                     <*  symbol lex "="
---                     <*> boolExprP
 
+-- and the statefull boolean assignment parser
 boolAssignState :: VarParser ()
 boolAssignState = do{ name <- identifier lex
                     ; symbol lex "="
