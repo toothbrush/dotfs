@@ -33,8 +33,8 @@ intExprP = buildExpressionParser table prim <?> "integer expression"
       where table = [[ inf "*" (*) AssocLeft {-, inf "/" (/) AssocLeft-} ]
                     ,[ inf "+" (+) AssocLeft , inf "-" (-) AssocLeft ]
                     ]                           -- an int expression can be:
-            prim = nestExprP intExprP
-                <|> intVarP
+            prim =  try (nestExprP intExprP)
+                <|> try intVarP
                 <|> fromInteger <$> integer lex    -- a constant number
 
 
