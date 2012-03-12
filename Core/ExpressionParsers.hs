@@ -52,6 +52,8 @@ boolExprP = buildExpressionParser table prim <?> "boolean expression"
 			    <|> try (mkCompP intExprP)                 -- comparator of integers
 				<|> boolVarP                               -- variable
                
+stringExprP :: VarParser String
+stringExprP = stringLiteral lex
 
 
 

@@ -36,6 +36,7 @@ assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try boolAssignState
+           <|> try strAssignState
            <|> intAssignState ) <* optional ( symbol lex ";" )
 
 
@@ -81,4 +82,11 @@ boolAssignState = do{ name <- identifier lex
                     ; return ()
                     }
 
+strAssignState :: VarParser ()
+strAssignState = do{ name <- identifier lex
+                   ; symbol lex "="
+                   ; val <- stringExprP
+                   ; updateState (insert name (VString val))
+                   ; return ()
+                   }
 
