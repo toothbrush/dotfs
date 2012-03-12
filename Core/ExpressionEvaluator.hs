@@ -1,5 +1,4 @@
 {-# LANGUAGE GADTs #-}
-
 {-# LANGUAGE Haskell98 #-}
 module Core.ExpressionEvaluator where
 

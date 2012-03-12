@@ -17,7 +17,6 @@ import System.Exit
 import System.Environment
 import System.IO
 import System.Fuse
---import System(getArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nub)
