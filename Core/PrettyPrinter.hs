@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Core.PrettyPrinter where
 
 import Core.Datatypes

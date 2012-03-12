@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Util.Helpers where
 
 lst4 :: (a,b,c,d) -> d

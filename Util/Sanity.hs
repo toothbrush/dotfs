@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Util.Sanity where
 
 import Core.Datatypes

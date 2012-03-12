@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Core.FSActions where
 
 import Core.Datatypes
@@ -16,7 +17,7 @@ import System.Exit
 import System.Environment
 import System.IO
 import System.Fuse
-import System(getArgs)
+--import System(getArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nub)

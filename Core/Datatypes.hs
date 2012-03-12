@@ -1,4 +1,5 @@
 {-#LANGUAGE GADTs, ExistentialQuantification #-}
+{-# LANGUAGE Haskell98 #-}
 module Core.Datatypes where
 
 import System.Fuse

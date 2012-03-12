@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE Haskell98 #-}
 module Core.Parsers where
 
 import Prelude hiding (lex)

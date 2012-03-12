@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Main where
 
 import Util.Options
@@ -18,7 +19,6 @@ import System.Exit
 import System.Environment
 import System.IO
 import System.Fuse
-import System(getArgs)
 import Control.Monad
 import Data.Maybe
 import Data.List (nub)

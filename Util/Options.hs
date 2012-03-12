@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Util.Options where
 
 import Util.Version

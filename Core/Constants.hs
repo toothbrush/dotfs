@@ -1,6 +1,7 @@
 {-
  - Everything here is evil by definition.
  -}
+{-# LANGUAGE Haskell98 #-}
 module Core.Constants where
 
 import Core.Datatypes

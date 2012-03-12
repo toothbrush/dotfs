@@ -1,3 +1,4 @@
+{-# LANGUAGE Haskell98 #-}
 module Core.HelperParsers where
 
 import Core.Datatypes

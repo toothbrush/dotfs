@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
+{-# LANGUAGE Haskell98 #-}
 module Core.ExpressionParsers where
 
 import Prelude hiding (lex,lookup)
