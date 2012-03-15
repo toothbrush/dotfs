@@ -30,11 +30,6 @@ table = [
   where
     op s f assoc = Infix (do { reservedOp lex s ; return f } <?> "operator") assoc
 
-myMul = undefined
-myDiv = undefined
-myAdd = undefined
-mySub = undefined
-
 factor =  parens lex exprP
       <|> ((Prim . VInt) <$> natural lex)
       <|> (Var) <$> identifier lex
