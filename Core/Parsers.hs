@@ -47,6 +47,8 @@ process file inp = case runParser fileParser empty "main" inp of
 
 
 
+set base=10
+set colortheme="jura"
 
 
 
