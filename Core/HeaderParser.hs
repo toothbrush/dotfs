@@ -30,6 +30,7 @@ headerP = () <$ symbol lex "<<dotfs" <* whiteSpace lex <* many assignmentP <* st
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
+           <|> try shellCommandP
            <|> assignState
             ) <* ( semi lex <* whiteSpace lex)
 
@@ -57,6 +58,15 @@ commentstyleP = do{ symbol lex "commentstyle"
                   ; return ()
                   }
 
+shellCommandP :: VarParser ()
+shellCommandP = do { name <- identifier lex
+                   ; whiteSpace lex
+                   ; symbol lex ":="
+                   ; whiteSpace lex
+                   ; command <- stringLiteral lex
+                   ; updateState (insert name (Sys command))
+                   ; return ()
+}
 
 -- stateful assignment parser
 assignState :: VarParser ()
