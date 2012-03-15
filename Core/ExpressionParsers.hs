@@ -24,8 +24,8 @@ exprP = buildExpressionParser table factor <?> "expression"
 
 --table :: [[ Operator Char st DFSExpr ]]
 table = [
-    [ op "*" (myMul) AssocLeft, op "/" (myDiv) AssocLeft ],
-    [ op "+" (myAdd) AssocLeft, op "-" (mySub) AssocLeft ]
+    [ op "*" (BiOp Mul) AssocLeft, op "/" (BiOp Div) AssocLeft ],
+    [ op "+" (BiOp Add) AssocLeft, op "-" (BiOp Sub) AssocLeft ]
     ]
   where
     op s f assoc = Infix (do { reservedOp lex s ; return f } <?> "operator") assoc
