@@ -23,7 +23,7 @@ lang :: LanguageDef st
 lang = javaStyle
      { reservedNames = ["commentstyle","tagstyle","if","else","true","false"]
      , caseSensitive = True
-     , opStart = tagletter
+     , opStart  = tagletter
      , opLetter = tagletter
      }
 
@@ -36,4 +36,3 @@ styleLang = emptyDef
           , opLetter = tagletter }
 
 styleLex = P.makeTokenParser styleLang
- 

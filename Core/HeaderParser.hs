@@ -22,10 +22,6 @@ import Text.Parsec.Expr
 import Data.Map
 
 
-
-
-
-
 -- parse the header, no whitespace around it is eaten
 headerP:: VarParser ()
 headerP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
@@ -35,50 +31,39 @@ headerP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
-           <|> try boolAssignState
-           <|> intAssignState ) <* optional ( symbol lex ";" )
+           -- <|> assignState
+            ) <* ( symbol lex ";" )
 
 
 -- we must prevent comment tags from being ignored by the lexer,
 -- so use the alternative lexer with great care
 tagstyleP,commentstyleP :: VarParser ()
-tagstyleP = do{ symbol lex "tagstyle" 
+tagstyleP = do{ symbol lex "tagstyle"
               ; symbol styleLex "="
               ; s1 <- operator styleLex
               ; symbol styleLex "tag"
               ; s2 <- operator lex
-              ; updateState (insert "tagstart" (VString s1))
-              ; updateState (insert "tagstop" (VString s2))
+              ; updateState (insert "tagstart" (Prim(VString s1)))
+              ; updateState (insert "tagstop"  (Prim(VString s2)))
               ; return ()
               }
 
-commentstyleP = do{ symbol lex "commentstyle" 
+commentstyleP = do{ symbol lex "commentstyle"
                   ; symbol styleLex "="
                   ; s1 <- operator styleLex
                   ; symbol styleLex "comment"
                   ; s2 <- operator lex
-                  ; updateState (insert "commentstart" (VString s1))
-                  ; updateState (insert "commentstop" (VString s2))
+                  ; updateState (insert "commentstart" (Prim(VString s1)))
+                  ; updateState (insert "commentstop"  (Prim(VString s2)))
                   ; return ()
                   }
 
 
--- statefull interger assignment parser      
-intAssignState :: VarParser ()
-intAssignState = do{ name <- identifier lex 
-                   ; symbol lex "="
-                   ; val <- intExprP
-                   ; updateState (insert name (VInt val))
-                   ; return ()
-                   }              
-
--- and the statefull boolean assignment parser
-boolAssignState :: VarParser ()
-boolAssignState = do{ name <- identifier lex
-                    ; symbol lex "="
-                    ; val <- boolExprP
-                    ; updateState (insert name (VBool val))
-                    ; return ()
-                    }
-
-
+-- stateful assignment parser
+assignState :: VarParser ()
+assignState = do{ name <- identifier lex
+                ; symbol lex "="
+                ; val <- exprP
+                ; updateState (insert name val)
+                ; return ()
+                }
