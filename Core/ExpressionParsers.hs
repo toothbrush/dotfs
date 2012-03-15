@@ -37,7 +37,8 @@ mySub = undefined
 
 factor =  parens lex exprP
       <|> ((Prim . VInt) <$> natural lex)
-      <?> "simple expression"
+      <|> (Var) <$> identifier lex
+      <?> "simple expression or variable"
 
 
 -- to factor out some common basics
