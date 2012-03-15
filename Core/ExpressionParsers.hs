@@ -6,6 +6,7 @@ import Prelude hiding (lex,lookup)
 import Core.Datatypes
 import Core.Lexers
 import Data.Map
+import Data.Functor.Identity
 import Core.HelperParsers
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Control.Monad (join)
@@ -22,19 +23,38 @@ import Text.Parsec.Expr
 exprP :: VarParser DFSExpr
 exprP = buildExpressionParser table factor <?> "expression"
 
---table :: [[ Operator Char st DFSExpr ]]
+table :: [[ Operator String st Identity DFSExpr ]]
 table = [
+    [pre "!" (UniOp Not)],
+    [ op "&&" (BiOp And) AssocNone ],
+    [ op "||" (BiOp Or) AssocNone ],
     [ op "*" (BiOp Mul) AssocLeft, op "/" (BiOp Div) AssocLeft ],
-    [ op "+" (BiOp Add) AssocLeft, op "-" (BiOp Sub) AssocLeft ]
+    [ op "+" (BiOp Add) AssocLeft, op "-" (BiOp Sub) AssocLeft ],
+    [ op "==" (BiOp Eq) AssocNone
+        , op ">" (BiOp GTOp) AssocNone
+        , op "<" (BiOp LTOp) AssocNone
+        , op "<=" (BiOp LEQ) AssocNone
+        , op ">=" (BiOp GEQ) AssocNone
+    ]
     ]
   where
-    op s f assoc = Infix (do { reservedOp lex s ; return f } <?> "operator") assoc
+    op s f assoc = Infix   (do { reservedOp lex s; return f } <?> "operator") assoc
+    pre s f      = Prefix  (do { reservedOp lex s; return f })
+    post s f     = Postfix (do { reservedOp lex s; return f })
 
 factor =  parens lex exprP
       <|> ((Prim . VInt) <$> natural lex)
-      <|> (Var) <$> identifier lex
+      <|> ((Prim . VBool) <$> boolTerm)
+      <|> ((Prim . VString) <$> stringLiteral lex)
+      <|> Var <$> identifier lex
       <?> "simple expression or variable"
 
+boolTerm =  do { reservedOp lex "true"
+               ; return True
+               }
+        <|> do { reservedOp lex "false"
+               ; return False
+               }
 
 -- to factor out some common basics
 -- nestExprP :: VarParser a -> VarParser a
@@ -43,17 +63,6 @@ factor =  parens lex exprP
 --            --    <|> mkMediumIfP inner
 -- 
 
--- the parser for integer expressions
--- intExprP :: VarParser Int
--- intExprP = buildExpressionParser table prim <?> "integer expression"
---       where table = [[ inf "*" (*) AssocLeft {-, inf "/" (/) AssocLeft-} ]
---                     ,[ inf "+" (+) AssocLeft , inf "-" (-) AssocLeft ]
---                     ]                           -- an int expression can be:
---             prim =  try (nestExprP intExprP)
---                 <|> try intVarP
---                 <|> fromInteger <$> integer lex    -- a constant number
--- 
--- 
 -- -- the parser for boolean expressions
 -- boolExprP :: VarParser Bool
 -- boolExprP = buildExpressionParser table prim <?> "boolean expression"
@@ -129,6 +138,3 @@ factor =  parens lex exprP
 -- 
 -- 
 -- -- helpers for easy expression parser table generation
--- inf s f   = Infix   (do{ symbol lex s; return f })
--- pre s f   = Prefix  (do{ symbol lex s; return f })
--- post s f  = Postfix (do{ symbol lex s; return f })

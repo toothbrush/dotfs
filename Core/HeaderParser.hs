@@ -31,7 +31,7 @@ assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> assignState
-            ) <* ( symbol lex ";"  <* whiteSpace lex)
+            ) <* ( semi lex <* whiteSpace lex)
 
 
 -- we must prevent comment tags from being ignored by the lexer,
