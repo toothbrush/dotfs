@@ -21,18 +21,17 @@ import Text.Parsec.Language
 import Text.Parsec.Expr
 import Data.Map
 
-
 -- parse the header, no whitespace around it is eaten
 headerP:: VarParser ()
-headerP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
+headerP = () <$ symbol lex "<<dotfs" <* whiteSpace lex <* many assignmentP <* string ">>"
 
 
 -- parse an assignment
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
-           -- <|> assignState
-            ) <* ( symbol lex ";" )
+           <|> assignState
+            ) <* ( symbol lex ";"  <* whiteSpace lex)
 
 
 -- we must prevent comment tags from being ignored by the lexer,
@@ -62,7 +61,9 @@ commentstyleP = do{ symbol lex "commentstyle"
 -- stateful assignment parser
 assignState :: VarParser ()
 assignState = do{ name <- identifier lex
+                ; whiteSpace lex
                 ; symbol lex "="
+                ; whiteSpace lex
                 ; val <- exprP
                 ; updateState (insert name val)
                 ; return ()

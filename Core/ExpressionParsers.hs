@@ -28,7 +28,7 @@ table = [
     [ op "+" (myAdd) AssocLeft, op "-" (mySub) AssocLeft ]
     ]
   where
-    op s f assoc = Infix (do { string s ; return f }) assoc
+    op s f assoc = Infix (do { reservedOp lex s ; return f } <?> "operator") assoc
 
 myMul = undefined
 myDiv = undefined
