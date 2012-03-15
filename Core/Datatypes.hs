@@ -2,24 +2,11 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.Datatypes where
 
-import System.Fuse
 import Text.Parsec
 import Text.ParserCombinators.Parsec.Prim
 import Data.Map
 
-data DotFS = DotFS {
-    dotfsEntryName     :: FilePath
-  , dotfsActualPath    :: FilePath
-  , dotfsVirtualPath   :: FilePath
-  , dotfsFileStat      :: FileStat
-  , dotfsContents      :: [DotFS]
-  }
- deriving Show
-
 data Conf = C FilePath deriving Show
-
-instance Eq DotFS where
-  (==) x y = dotfsEntryName x == dotfsEntryName y
 
 
 -- our threaded parser type
