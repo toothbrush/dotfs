@@ -48,7 +48,7 @@ exprBlockP :: VarParser BodyElem
 exprBlockP = do{ map <- getState
               ; symbol lex (extractTagStart map)
               ; symbol lex "var"
-              ; var <- identifier lex -- TODO: exprP
+              ; var <- exprP
               ; string (extractTagStop map)
               ; return $ Ref var
               }

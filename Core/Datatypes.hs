@@ -40,7 +40,7 @@ type Body = [BodyElem]
 -- boolean value) or a literal expression (usually a variable inserted somewhere)
 -- or, of course, verbatim content. These components can be chained.
 data BodyElem = Cond DFSExpr Body
-              | Ref  VarName
+              | Ref  DFSExpr
               | Verb String
               deriving Show
 
