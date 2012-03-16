@@ -20,8 +20,12 @@ type DFSState = Map VarName DFSExpr
 data Value = VInt Integer
            | VBool Bool
            | VString String
-           deriving (Show,Eq)
+           deriving (Eq)
 
+instance Show Value where
+  show (VInt i) = show i
+  show (VBool b) = show b
+  show (VString s) = s
 
 
 -- | a config file is either just a normal file, to be passed
