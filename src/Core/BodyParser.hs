@@ -36,7 +36,7 @@ conditionalBlockP = do{ map <- getState
                       ; symbol lex (extractTagStart map)
                       ; symbol lex "if"
                       ; cond <- exprP
-                      ; symbol lex (extractTagStop map)
+                      ; string (extractTagStop map)
                       ; content <- bodyP
                       ; symbol lex (extractTagStart map)
                       ; symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
