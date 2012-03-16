@@ -38,10 +38,7 @@ fileP = (try (do { whiteSpace lex
                  ; return (Annotated h b)
                  }
                  )) -- end with bodyP. parameterised.
---     <|> (Vanilla <$> eatEverything)
---
---eatEverything :: ParsecT [Char] u Data.Functor.Identity.Identity [Char]
---eatEverything = many anyChar
+     <|> (Vanilla <$> eatEverything)
 
 -- run the header parser and evauator, and then the body parser on the result
 process :: FilePath -> String -> String

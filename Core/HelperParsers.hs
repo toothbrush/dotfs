@@ -16,6 +16,9 @@ import Text.Parsec.Expr
 
 
 
+eatEverything :: VarParser String
+eatEverything = many anyChar
+
 
 
 -- new combinator: (source: http://www.haskell.org/pipermail/beginners/2010-January/003123.html)
