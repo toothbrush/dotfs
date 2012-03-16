@@ -47,6 +47,6 @@ parseTest p st inp = case runParser (includeState p) st "" inp of
                           (Left err) -> do{ putStr "parse error at "
                                           ; print err
                                           }
-                          (Right (x,state))  -> do{ putStr "result: "
-                                                  ; print x
-                                                  }
+                          (Right (x,state))  -> case x of
+                                                 Vanilla v -> do { putStrLn "Vanilla" }
+                                                 Annotated h b -> do { putStrLn "Annotated" }

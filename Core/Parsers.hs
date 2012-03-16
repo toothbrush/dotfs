@@ -25,7 +25,9 @@ import Util.Helpers
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
 testfile name = do { fc <- readFile name
-                   ; parseTest fileP empty fc
+                   ; let output = process name fc
+                   -- ; parseTest fileP empty fc
+                   ; putStrLn output
                    ; return ()
                    }
 
@@ -37,15 +39,15 @@ fileP = (try (do { whiteSpace lex
                  ; eof
                  ; return (Annotated h b)
                  }
-                 )) -- end with bodyP. parameterised.
+                 ))
      <|> (Vanilla <$> eatEverything)
 
--- run the header parser and evauator, and then the body parser on the result
+-- run the header parser and evaluator, and then the body parser on the result
 process :: FilePath -> String -> String
 process file inp = case runParser fileP empty "main" inp of
               Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> case s of
-                    Vanilla v -> v
+                    Vanilla v     -> v
                     Annotated h b -> show h ++ show b
 
 
