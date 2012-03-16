@@ -20,7 +20,7 @@ type DFSState = Map VarName DFSExpr
 data Value = VInt Integer
            | VBool Bool
            | VString String
-           deriving Show
+           deriving (Show,Eq)
 
 
 
