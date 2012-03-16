@@ -8,6 +8,7 @@ import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
 import Core.HelperParsers
+import Core.ExpressionEvaluator
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Control.Monad (join)
@@ -69,7 +70,9 @@ shellCommandP = do { name <- identifier lex
                    ; symbol lex ":="
                    ; whiteSpace lex
                    ; command <- stringLiteral lex
-                   ; updateState (insert name (Sys command))
+                   ; s <- getState
+                   ; let e = eval s (Sys command)
+                   ; updateState (insert name (Prim e))
 }
 
 -- | assignState parses an assignment. That is, an identifier, an equals (=)
@@ -80,5 +83,7 @@ assignState = do{ name <- identifier lex
                 ; symbol lex "="
                 ; whiteSpace lex
                 ; val <- exprP
-                ; updateState (insert name val)
+                ; s   <- getState
+                ; let e = eval s val
+                ; updateState (insert name (Prim e))
                 }

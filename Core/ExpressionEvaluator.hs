@@ -47,7 +47,7 @@ evalUni s (UniOp Not b) = case eval s b of
 evalUni _ _ = VBool False -- no other uni-operators for now.
 
 evalBi :: DFSState -> DFSExpr -> Value
-evalBi s (BiOp Add e1 e2)   = doInt s (+) e1 e2
+evalBi s (BiOp Add e1 e2)   = doAdd s e1 e2
 evalBi s (BiOp Sub e1 e2)   = doInt s (-) e1 e2
 evalBi s (BiOp Mul e1 e2)   = doInt s (*) e1 e2
 evalBi s (BiOp Div e1 e2)   = doInt s (div) e1 e2
@@ -64,6 +64,12 @@ evalBi s (BiOp NEQ  e1 e2)  = let e1' = eval s e1
 evalBi s (BiOp And  e1 e2)  = doBool s (&&) e1 e2
 evalBi s (BiOp Or   e1 e2)  = doBool s (||) e1 e2
 
+doAdd s a b   = let e1 = eval s a
+                    e2 = eval s b
+                in  f e1 e2
+                where f (VString s1) (VString s2) = VString $ s1 ++ s2
+                      f (VInt    i1) (VInt    i2) = VInt $ i1 +  i2
+                      f _            _            = VInt 0
 doInt s f a b = let e1' = eval s a
                     e2' = eval s b
                 in  e1' `handle` e2'
