@@ -9,7 +9,7 @@ import Core.HeaderParser (headerP)
 import Core.HelperParsers
 import Core.Lexers
 import Core.ExpressionParsers
-{-import Core.BodyParser-}
+import Core.BodyParser
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Text.Parsec hiding (parseTest)
@@ -30,18 +30,18 @@ testfile name = do { fc <- readFile name
                    }
 
 fileP :: VarParser Config
-fileP = (try (do { updateState (insert "tagstart" (Prim(VString "<<")))
-                 ; updateState (insert "tagstop"  (Prim(VString ">>")))      -- defaults TODO move somewhere nicer
-                 ; whiteSpace lex
+fileP = (try (do { whiteSpace lex
                  ; headerP
                  ; h <- getState
-                 ; b <- eatEverything
-                 ; return (Annotated h ([Verb b]))
+                 ; b <- bodyP
+                 ; eof
+                 ; return (Annotated h b)
                  }
                  )) -- end with bodyP. parameterised.
-     <|> (Vanilla <$> eatEverything)
-
-eatEverything = many anyChar
+--     <|> (Vanilla <$> eatEverything)
+--
+--eatEverything :: ParsecT [Char] u Data.Functor.Identity.Identity [Char]
+--eatEverything = many anyChar
 
 -- run the header parser and evauator, and then the body parser on the result
 process :: FilePath -> String -> String

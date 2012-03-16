@@ -19,7 +19,6 @@ import Text.Parsec.Prim
 import Text.Parsec.Language
 import Text.Parsec.Expr
 
-
 exprP :: VarParser DFSExpr
 exprP = buildExpressionParser table factor <?> "expression"
 

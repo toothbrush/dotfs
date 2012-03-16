@@ -30,7 +30,6 @@ headerP = do { symbol lex "<<dotfs"
              ; return ()
              }
 
-
 -- parse an assignment
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP

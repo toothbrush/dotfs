@@ -22,63 +22,51 @@ import Text.Parsec.Language
 import Text.Parsec.Expr
 
 
-bodyP :: VarParser String
-bodyP = concat <$> many blockP 
+bodyP :: VarParser Body
+bodyP = many blockP
 
-blockP :: VarParser String
-blockP =  try conditionalBlockP 
+blockP :: VarParser BodyElem
+blockP =  try conditionalBlockP
       <|> try exprBlockP
       <|> verbBlockP
 
 
-conditionalBlockP :: VarParser String
+conditionalBlockP :: VarParser BodyElem
 conditionalBlockP = do{ map <- getState
                       ; symbol lex (extractTagStart map)
                       ; symbol lex "if"
-                      ; cond <- boolExprP
+                      ; cond <- exprP
                       ; symbol lex (extractTagStop map)
                       ; content <- bodyP
                       ; symbol lex (extractTagStart map)
                       ; symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
                       ; string (extractTagStop map)
-                      ; return $ if cond then content else ""
+                      ; return $ Cond cond content
                       }
-            
-exprBlockP :: VarParser String          
+
+exprBlockP :: VarParser BodyElem
 exprBlockP = do{ map <- getState
               ; symbol lex (extractTagStart map)
               ; symbol lex "var"
-              ; var <- anyExprP
+              ; var <- identifier lex -- TODO: exprP
               ; string (extractTagStop map)
-              ; return $ case var of
-                              VInt i -> show i
-                              VBool b -> show b
-                              VString s -> s
+              ; return $ Ref var
               }
 
 
-verbBlockP :: VarParser String
+verbBlockP :: VarParser BodyElem
 verbBlockP = do{ map <- getState
                ; let opentag = const () <$> string (extractTagStart map)
-                     enofVerb = lookAhead (eof <|> opentag)
-                 in many1Till anyChar enofVerb
+                     endofVerb = lookAhead (eof <|> opentag)
+                 in Verb <$> many1Till anyChar endofVerb
                }
-
-
--- a parser that parses any constant expression
-anyExprP :: VarParser Value
-anyExprP =  try (VInt <$> intExprP)
-        <|> try (VBool <$> boolExprP)
-        <|> VString <$> stringVarP
-
-
 
 
 -- helpers to retrieve start and stop tags as string from the state map:
 extractTagStart m = case lookup "tagstart" m of
-                       Just (VString s) -> s
+                       Just (Prim (VString s)) -> s
                        _                -> "<<"
 
 extractTagStop m = case lookup "tagstop" m of
-                       Just (VString s) -> s
+                       Just (Prim (VString s)) -> s
                        _                -> ">>"

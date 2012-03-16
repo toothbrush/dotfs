@@ -29,10 +29,13 @@ lang = javaStyle
 
 lex = P.makeTokenParser lang
 
--- alterantive lexer for style definitions
+-- alternative lexer for style definitions
 styleLang :: LanguageDef st
 styleLang = emptyDef
           { opStart  = tagletter
           , opLetter = tagletter }
 
 styleLex = P.makeTokenParser styleLang
+
+
+-- TODO make parameterised lexer for body?

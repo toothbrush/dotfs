@@ -23,11 +23,11 @@ data Value = VInt Integer
            deriving Show
 
 
--- a proper AST for our config files
 
 -- | a config file is either just a normal file, to be passed
 -- through unchanged, or else it's an annotated file with a header
 -- and a body.
+-- a proper AST for our config files, in other words.
 data Config = Vanilla String
             | Annotated Header Body
             deriving Show
@@ -35,6 +35,7 @@ data Config = Vanilla String
 type Header = DFSState
 
 type Body = [BodyElem]
+
 -- | the body is either a conditional block (shown depending on some
 -- boolean value) or a literal expression (usually a variable inserted somewhere)
 -- or, of course, verbatim content. These components can be chained.
