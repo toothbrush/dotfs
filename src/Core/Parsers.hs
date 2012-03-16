@@ -73,11 +73,11 @@ outputInfoIf h e        = case lookup "commentstart" h of
                             Just (Prim (VString start)) ->
                               case lookup "commentstop" h of
                               Nothing -> concat $ ["\n",start," if: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"if:",show e,stop]) ++ "\n"
+                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"if:",show e,stop])
 outputEndIf :: Header -> DFSExpr -> String
 outputEndIf h e        = case lookup "commentstart" h of
                             Nothing -> ""
                             Just (Prim (VString start)) ->
                               case lookup "commentstop" h of
                               Nothing -> concat $ ["\n",start," endif: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"endif:",show e,stop]) ++ "\n"
+                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"endif:",show e,stop])
