@@ -2,7 +2,7 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.Parsers where
 
-import Prelude hiding (lex)
+import Prelude hiding (lex, lookup)
 
 import Core.Datatypes
 import Core.HeaderParser (headerP)
@@ -20,6 +20,7 @@ import Text.Parsec.Token
 import Text.Parsec.Prim hiding (parseTest)
 
 import Data.Map
+import Data.List (intersperse)
 
 import Util.Helpers
 
@@ -27,7 +28,6 @@ import Util.Helpers
 testfile :: FilePath -> IO ()
 testfile name = do { fc <- readFile name
                    ; let output = process name fc
-                   -- ; parseTest fileP empty fc
                    ; putStrLn output
                    ; return ()
                    }
@@ -54,11 +54,19 @@ process file inp = case runParser fileP empty "main" inp of
 present :: Header -> Body -> String
 present h []     = ""
 present h ((Cond c b):bs) = case eval h c of
-                                VBool True -> present h b
+                                VBool True -> outputInfo h c ++ present h b
                                 _          -> ""
                             ++ present h bs
-present h ((Ref r):bs)    = show (eval h r)    ++ present h bs
+present h ((Ref r):bs)    = outputInfo h r ++ show (eval h r) ++ present h bs
 present h ((Verb v):bs)   = v ++ present h bs
+
+outputInfo :: Header -> DFSExpr -> String
+outputInfo h e = case lookup "commentstart" h of
+                    Nothing -> ""
+                    Just (Prim (VString start)) ->
+                      case lookup "commentstop" h of
+                      Nothing -> ""
+                      Just (Prim (VString stop)) -> concat $ intersperse " " [start,show e,stop]
 
 
 

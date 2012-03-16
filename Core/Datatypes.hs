@@ -23,8 +23,8 @@ data Value = VInt Integer
            deriving (Eq)
 
 instance Show Value where
-  show (VInt i) = show i
-  show (VBool b) = show b
+  show (VInt    i) = show i
+  show (VBool   b) = show b
   show (VString s) = s
 
 
