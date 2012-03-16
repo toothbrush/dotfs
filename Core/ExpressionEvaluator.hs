@@ -33,8 +33,9 @@ execSystem c = unsafePerformIO $ do (inn,out,err,pid) <- runInteractiveCommand c
 parseUntilPrompt :: Handle -> IO [String]
 parseUntilPrompt out = do
   h <- hIsEOF out
-  if h then
-      return []
+  if h
+      then
+        return []
       else do
         latest <- hGetLine out
         (:) <$> return latest <*> parseUntilPrompt out
