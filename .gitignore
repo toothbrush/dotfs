@@ -1,4 +1,4 @@
 dist
 dotfs
-A
-B
+*.hi
+*.o
