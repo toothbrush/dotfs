@@ -36,6 +36,3 @@ styleLang = emptyDef
           , opLetter = tagletter }
 
 styleLex = P.makeTokenParser styleLang
-
-
--- TODO make parameterised lexer for body?
