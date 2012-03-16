@@ -54,22 +54,30 @@ process file inp = case runParser fileP empty "main" inp of
 present :: Header -> Body -> String
 present h []     = ""
 present h ((Cond c b):bs) = case eval h c of
-                                VBool True -> outputInfo h c ++ present h b
+                                VBool True -> outputInfoIf h c ++ present h b ++ outputEndIf h c
                                 _          -> ""
                             ++ present h bs
-present h ((Ref r):bs)    = outputInfo h r ++ show (eval h r) ++ present h bs
+present h ((Ref r):bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
 present h ((Verb v):bs)   = v ++ present h bs
 
-outputInfo :: Header -> DFSExpr -> String
-outputInfo h e = case lookup "commentstart" h of
-                    Nothing -> ""
-                    Just (Prim (VString start)) ->
-                      case lookup "commentstop" h of
-                      Nothing -> ""
-                      Just (Prim (VString stop)) -> concat $ intersperse " " [start,show e,stop]
-
-
-
-
-
-
+outputInfoRef :: Header -> DFSExpr -> String
+outputInfoRef h e        = case lookup "commentstart" h of
+                             Nothing -> ""
+                             Just (Prim (VString start)) ->
+                               case lookup "commentstop" h of
+                               Nothing -> ""
+                               Just (Prim (VString stop)) -> concat $ intersperse " " [start,"ref:",show e,stop]
+outputInfoIf :: Header -> DFSExpr -> String
+outputInfoIf h e        = case lookup "commentstart" h of
+                            Nothing -> ""
+                            Just (Prim (VString start)) ->
+                              case lookup "commentstop" h of
+                              Nothing -> concat $ ["\n",start," if: ",show e,"\n"]
+                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"if:",show e,stop]) ++ "\n"
+outputEndIf :: Header -> DFSExpr -> String
+outputEndIf h e        = case lookup "commentstart" h of
+                            Nothing -> ""
+                            Just (Prim (VString start)) ->
+                              case lookup "commentstop" h of
+                              Nothing -> concat $ ["\n",start," endif: ",show e,"\n"]
+                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"endif:",show e,stop]) ++ "\n"

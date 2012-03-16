@@ -3,6 +3,7 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.ExpressionEvaluator where
 
+import Prelude hiding (lookup)
 import System.IO
 import Control.Applicative
 import System.Process
@@ -14,7 +15,9 @@ import Data.Map
 
 eval :: DFSState -> DFSExpr -> Value
 eval s (Prim p) = p
-eval s (Var v)  = eval s $ s!v
+eval s (Var v)  = case lookup v s of
+                    Nothing -> VBool False -- default...
+                    Just e  -> eval s e
 eval s (Sys c)  = VString $ execSystem c
 eval s (If c t e) = case eval s c of
                         VBool True -> eval s t

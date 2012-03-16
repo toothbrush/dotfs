@@ -55,10 +55,12 @@ tagstyleP = do{ symbol lex "tagstyle"
 commentstyleP = do{ symbol lex "commentstyle"
                   ; symbol styleLex "="
                   ; s1 <- operator styleLex
-                  ; symbol styleLex "comment"
-                  ; s2 <- operator lex
                   ; updateState (insert "commentstart" (Prim(VString s1)))
-                  ; updateState (insert "commentstop"  (Prim(VString s2)))
+                  ; symbol styleLex "comment"
+                  ; (optional (do s2 <- operator lex
+                                  updateState (insert "commentstop"  (Prim(VString s2)))
+                        )
+                    )
                   }
 
 -- | this parses a shell command. These are denoted by using := instead
