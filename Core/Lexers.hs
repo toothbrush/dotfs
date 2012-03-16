@@ -17,23 +17,25 @@ import Text.Parsec.Expr
 
 
 -- stuff about the language and the default lexer
-tagletter = oneOf "~!@#$%^&*()_+|`-=\\{}:\"<>?[];',./"
+tagletter = oneOf "~!@#$%^&*()_+|`-=\\{}:\"<>?[]',./"
 
 lang :: LanguageDef st
 lang = javaStyle
      { reservedNames = ["commentstyle","tagstyle","if","else","true","false"]
      , caseSensitive = True
-     , opStart = tagletter
+     , opStart  = tagletter
      , opLetter = tagletter
      }
 
 lex = P.makeTokenParser lang
 
--- alterantive lexer for style definitions
+-- alternative lexer for style definitions
 styleLang :: LanguageDef st
 styleLang = emptyDef
           { opStart  = tagletter
           , opLetter = tagletter }
 
 styleLex = P.makeTokenParser styleLang
- 
+
+
+-- TODO make parameterised lexer for body?

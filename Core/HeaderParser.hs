@@ -8,6 +8,7 @@ import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
 import Core.HelperParsers
+import Core.ExpressionEvaluator
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Control.Monad (join)
@@ -21,72 +22,70 @@ import Text.Parsec.Language
 import Text.Parsec.Expr
 import Data.Map
 
-
-
-
-
-
 -- parse the header, no whitespace around it is eaten
 headerP:: VarParser ()
-headerP = () <$ symbol lex "<<dotfs" <* many assignmentP <* string ">>"
-
+headerP = do { symbol lex "<<dotfs"
+             ; whiteSpace lex
+             ; as <- many assignmentP
+             ; string ">>"
+             ; return ()
+             }
 
 -- parse an assignment
 assignmentP :: VarParser ()
 assignmentP = (try tagstyleP
            <|> try commentstyleP
-           <|> try boolAssignState
-           <|> try strAssignState
-           <|> intAssignState ) <* optional ( symbol lex ";" )
+           <|> try shellCommandP
+           <|> assignState
+            ) <* ( semi lex <* whiteSpace lex)
 
 
 -- we must prevent comment tags from being ignored by the lexer,
 -- so use the alternative lexer with great care
 tagstyleP,commentstyleP :: VarParser ()
-tagstyleP = do{ symbol lex "tagstyle" 
+tagstyleP = do{ symbol lex "tagstyle"
               ; symbol styleLex "="
               ; s1 <- operator styleLex
               ; symbol styleLex "tag"
               ; s2 <- operator lex
-              ; updateState (insert "tagstart" (VString s1))
-              ; updateState (insert "tagstop" (VString s2))
-              ; return ()
+              ; updateState (insert "tagstart" (Prim(VString s1)))
+              ; updateState (insert "tagstop"  (Prim(VString s2)))
               }
 
-commentstyleP = do{ symbol lex "commentstyle" 
+commentstyleP = do{ symbol lex "commentstyle"
                   ; symbol styleLex "="
                   ; s1 <- operator styleLex
+                  ; updateState (insert "commentstart" (Prim(VString s1)))
                   ; symbol styleLex "comment"
-                  ; s2 <- operator lex
-                  ; updateState (insert "commentstart" (VString s1))
-                  ; updateState (insert "commentstop" (VString s2))
-                  ; return ()
+                  ; (optional (do s2 <- operator lex
+                                  updateState (insert "commentstop"  (Prim(VString s2)))
+                        )
+                    )
                   }
 
+-- | this parses a shell command. These are denoted by using := instead
+-- of = for assignment. This is because backticks are a pain to parse, and
+-- we prefer the built-in stringLiteral parser.
+shellCommandP :: VarParser ()
+shellCommandP = do { name <- identifier lex
+                   ; whiteSpace lex
+                   ; symbol lex ":="
+                   ; whiteSpace lex
+                   ; command <- stringLiteral lex
+                   ; s <- getState
+                   ; let e = eval s (Sys command)
+                   ; updateState (insert name (Prim e))
+}
 
--- statefull interger assignment parser      
-intAssignState :: VarParser ()
-intAssignState = do{ name <- identifier lex 
-                   ; symbol lex "="
-                   ; val <- intExprP
-                   ; updateState (insert name (VInt val))
-                   ; return ()
-                   }              
-
--- and the statefull boolean assignment parser
-boolAssignState :: VarParser ()
-boolAssignState = do{ name <- identifier lex
-                    ; symbol lex "="
-                    ; val <- boolExprP
-                    ; updateState (insert name (VBool val))
-                    ; return ()
-                    }
-
-strAssignState :: VarParser ()
-strAssignState = do{ name <- identifier lex
-                   ; symbol lex "="
-                   ; val <- stringExprP
-                   ; updateState (insert name (VString val))
-                   ; return ()
-                   }
-
+-- | assignState parses an assignment. That is, an identifier, an equals (=)
+-- symbol, and then an expression.
+assignState :: VarParser ()
+assignState = do{ name <- identifier lex
+                ; whiteSpace lex
+                ; symbol lex "="
+                ; whiteSpace lex
+                ; val <- exprP
+                ; s   <- getState
+                ; let e = eval s val
+                ; updateState (insert name (Prim e))
+                }

@@ -16,6 +16,9 @@ import Text.Parsec.Expr
 
 
 
+eatEverything :: VarParser String
+eatEverything = many anyChar
+
 
 
 -- new combinator: (source: http://www.haskell.org/pipermail/beginners/2010-January/003123.html)
@@ -37,15 +40,13 @@ includeState :: GenParser s st a -> GenParser s st (a,st)
 includeState p = do{ res <- p
                    ; state <- getState
                    ; return (res,state)
-                   } 
+                   }
 
 -- parseTest adepted to accept an initial state
 parseTest p st inp = case runParser (includeState p) st "" inp of
                           (Left err) -> do{ putStr "parse error at "
                                           ; print err
                                           }
-                          (Right (x,state))  -> do{ putStr "result: "
-                                                  ; print x
-                                                  ; putStr "output state: "
-                                                  ; print state
-                                                  }
+                          (Right (x,state))  -> case x of
+                                                 Vanilla v -> do { putStrLn "Vanilla" }
+                                                 Annotated h b -> do { putStrLn "Annotated" }

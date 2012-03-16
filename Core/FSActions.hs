@@ -2,6 +2,7 @@
 module Core.FSActions where
 
 import Core.Datatypes
+import Core.FuseTypes
 import Util.Debug
 import Core.Constants
 import Core.Parsers
