@@ -9,6 +9,7 @@ import Core.HeaderParser (headerP)
 import Core.HelperParsers
 import Core.Lexers
 import Core.ExpressionParsers
+import Core.ExpressionEvaluator
 import Core.BodyParser
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
@@ -48,9 +49,16 @@ process file inp = case runParser fileP empty "main" inp of
               Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> case s of
                     Vanilla v     -> v
-                    Annotated h b -> show h ++ show b
+                    Annotated h b -> present h b
 
-
+present :: Header -> Body -> String
+present h []     = ""
+present h ((Cond c b):bs) = case eval h c of
+                                VBool True -> present h b
+                                _          -> ""
+                            ++ present h bs
+present h ((Ref r):bs)    = show (eval h r)    ++ present h bs
+present h ((Verb v):bs)   = v ++ present h bs
 
 
 
