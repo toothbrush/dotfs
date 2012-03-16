@@ -3,6 +3,11 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.ExpressionEvaluator where
 
+import System.IO
+import Control.Applicative
+import System.Process
+import System.IO.Unsafe
+
 import Core.Datatypes
 import Data.Maybe
 import Data.Map
@@ -10,7 +15,7 @@ import Data.Map
 eval :: DFSState -> DFSExpr -> Value
 eval s (Prim p) = p
 eval s (Var v)  = eval s $ s!v
-eval s (Sys c)  = VString ("to be executed: " ++ c)
+eval s (Sys c)  = VString $ execSystem c
 eval s (If c t e) = case eval s c of
                         VBool True -> eval s t
                         _          -> eval s e
@@ -18,7 +23,21 @@ eval s o@(UniOp _ e) = evalUni s o
 eval s o@(BiOp  _ e1 e2) = evalBi s o
 
 
+execSystem :: String -> String
+execSystem c = unsafePerformIO $ do (inn,out,err,pid) <- runInteractiveCommand c
+                                    mapM_ (flip hSetBinaryMode False) [inn, out]
+                                    hSetBuffering out NoBuffering
+                                    parsedIntro <- parseUntilPrompt out
+                                    return (concat parsedIntro)
 
+parseUntilPrompt :: Handle -> IO [String]
+parseUntilPrompt out = do
+  h <- hIsEOF out
+  if h then
+      return []
+      else do
+        latest <- hGetLine out
+        (:) <$> return latest <*> parseUntilPrompt out
 
 evalUni :: DFSState -> DFSExpr -> Value
 evalUni s (UniOp Not b) = case eval s b of
