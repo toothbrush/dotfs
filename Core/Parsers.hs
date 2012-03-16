@@ -30,7 +30,9 @@ testfile name = do { fc <- readFile name
                    }
 
 fileP :: VarParser Config
-fileP = (try (do { whiteSpace lex
+fileP = (try (do { updateState (insert "tagstart" (Prim(VString "<<")))
+                 ; updateState (insert "tagstop"  (Prim(VString ">>")))      -- defaults TODO move somewhere nicer
+                 ; whiteSpace lex
                  ; headerP
                  ; h <- getState
                  ; b <- eatEverything

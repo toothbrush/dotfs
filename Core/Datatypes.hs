@@ -53,6 +53,6 @@ data DFSExpr   = Var  VarName
                deriving Show
 
 data Op     = Add | Sub | Mul | Div
-            | Eq  | LTOp| GTOp| LEQ | GEQ
+            | Eq  | LTOp| GTOp| LEQ | GEQ | NEQ
             | And | Or  | Not
             deriving Show

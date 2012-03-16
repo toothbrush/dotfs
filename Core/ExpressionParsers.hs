@@ -35,6 +35,7 @@ table = [
         , op "<" (BiOp LTOp) AssocNone
         , op "<=" (BiOp LEQ) AssocNone
         , op ">=" (BiOp GEQ) AssocNone
+        , op "!=" (BiOp NEQ) AssocNone
     ]
     ]
   where
@@ -68,36 +69,3 @@ ifTerm = do { reservedOp lex "if"
             ; symbol lex "}"
             ; return (If condition thenbody elsebody)
             }
-
--- 
--- 
--- -- the ifP parser generators create a parser of ifstatements of the given type
--- mkIfP{-,mkShortIfP,mkMediumIfP-} :: VarParser a -> VarParser a
--- mkIfP p = do{ symbol lex "if"
---             ; symbol lex "("
---             ; cond <- boolExprP
---             ; symbol lex ")"
---             ; symbol lex "{"
---             ; r1 <- p
---             ; symbol lex "}"
---             ; symbol lex "{"
---             ; r2 <- p
---             ; symbol lex "}"
---             ; return $ if cond then r1 else r2
---             }
--- 
--- 
--- -- a combinator that generates a boolean parser
--- mkCompP :: Ord a => VarParser a -> VarParser Bool
--- mkCompP p =  try ((==) <$> p <* symbol lex "==" <*> p)
---          <|> try ((/=) <$> p <* symbol lex "!=" <*> p)
---          <|> try ((>)  <$> p <* symbol lex ">"  <*> p)
---          <|> try ((<)  <$> p <* symbol lex "<"  <*> p)
---          <|> try ((>=) <$> p <* symbol lex ">=" <*> p)
---          <|> try ((<=) <$> p <* symbol lex "<=" <*> p)
--- 
--- 
--- 
--- 
--- 
--- -- helpers for easy expression parser table generation
