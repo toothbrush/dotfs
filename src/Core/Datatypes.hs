@@ -3,9 +3,11 @@
 module Core.Datatypes where
 
 import Text.Parsec
+import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim
 import Data.Map
 
+import Prelude hiding (lookup)
 
 data Conf = C FilePath deriving Show
 
@@ -61,16 +63,30 @@ instance Show DFSExpr where
   show (Prim v) = show v
   show (Sys  s) = s
   show (If c e1 e2) = "if("++show c++"){"++show e1++"}else{" ++ show e2 ++ "}"
-  show (UniOp o e) = show o ++ show e
-  show (BiOp  o e1 e2) = show e1++ show o ++ show e2
+  show (UniOp o e) = "(" ++ show o ++ show e ++ ")"
+  show (BiOp  o e1 e2) = "("++show e1++ show o ++ show e2++")"
 
 
 instance Show Op where
-  show Add = "+"
+  show op = fromMaybe "?" (lookup op (fromList
+            [ (Add, "+")
+            , (Sub, "-")
+            , (Div, "/")
+            , (Mul, "*")
+            , (Eq,  "==")
+            , (LTOp, "<")
+            , (GTOp, ">")
+            , (LEQ, "<=")
+            , (GEQ, ">=")
+            , (NEQ, "!=")
+            , (And, "&&")
+            , (Or, "||")
+            , (Not, "!")
+            ]))
 
 
 
 data Op     = Add | Sub | Mul | Div
             | Eq  | LTOp| GTOp| LEQ | GEQ | NEQ
             | And | Or  | Not
-            deriving Eq
+            deriving (Eq,Ord)
