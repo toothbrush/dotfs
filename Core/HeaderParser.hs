@@ -23,7 +23,12 @@ import Data.Map
 
 -- parse the header, no whitespace around it is eaten
 headerP:: VarParser ()
-headerP = () <$ symbol lex "<<dotfs" <* whiteSpace lex <* many assignmentP <* string ">>"
+headerP = do { symbol lex "<<dotfs"
+             ; whiteSpace lex
+             ; as <- many assignmentP
+             ; string ">>"
+             ; return ()
+             }
 
 
 -- parse an assignment
@@ -45,7 +50,6 @@ tagstyleP = do{ symbol lex "tagstyle"
               ; s2 <- operator lex
               ; updateState (insert "tagstart" (Prim(VString s1)))
               ; updateState (insert "tagstop"  (Prim(VString s2)))
-              ; return ()
               }
 
 commentstyleP = do{ symbol lex "commentstyle"
@@ -55,7 +59,6 @@ commentstyleP = do{ symbol lex "commentstyle"
                   ; s2 <- operator lex
                   ; updateState (insert "commentstart" (Prim(VString s1)))
                   ; updateState (insert "commentstop"  (Prim(VString s2)))
-                  ; return ()
                   }
 
 -- | this parses a shell command. These are denoted by using := instead
@@ -68,7 +71,6 @@ shellCommandP = do { name <- identifier lex
                    ; whiteSpace lex
                    ; command <- stringLiteral lex
                    ; updateState (insert name (Sys command))
-                   ; return ()
 }
 
 -- | assignState parses an assignment. That is, an identifier, an equals (=)
@@ -80,5 +82,4 @@ assignState = do{ name <- identifier lex
                 ; whiteSpace lex
                 ; val <- exprP
                 ; updateState (insert name val)
-                ; return ()
                 }

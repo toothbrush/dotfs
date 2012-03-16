@@ -1,4 +1,4 @@
-{-#LANGUAGE GADTs, ExistentialQuantification #-}
+{-# LANGUAGE GADTs, ExistentialQuantification #-}
 {-# LANGUAGE Haskell98 #-}
 module Core.Datatypes where
 
@@ -32,18 +32,16 @@ data Config = Vanilla String
             | Annotated Header Body
             deriving Show
 
--- | a header just consists of a number of assignments.
-data Header = Assignment VarName DFSExpr
-            deriving Show
+type Header = DFSState
 
+type Body = [BodyElem]
 -- | the body is either a conditional block (shown depending on some
 -- boolean value) or a literal expression (usually a variable inserted somewhere)
 -- or, of course, verbatim content. These components can be chained.
-data Body   = Seq  Body Body
-            | Cond DFSExpr Body Body
-            | Lit  DFSExpr
-            | Verb String
-            deriving Show
+data BodyElem = Cond DFSExpr Body
+              | Ref  VarName
+              | Verb String
+              deriving Show
 
 -- | an expression
 data DFSExpr   = Var  VarName

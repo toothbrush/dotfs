@@ -29,10 +29,15 @@ testfile name = do { fc <- readFile name
                    ; return ()
                    }
 
-
-fileP :: VarParser String
-fileP = (try (whiteSpace lex *> headerP *> eatEverything)) -- end with bodyP
-     <|> eatEverything
+fileP :: VarParser Config
+fileP = (try (do { whiteSpace lex
+                 ; headerP
+                 ; h <- getState
+                 ; b <- eatEverything
+                 ; return (Annotated h ([Verb b]))
+                 }
+                 )) -- end with bodyP. parameterised.
+     <|> (Vanilla <$> eatEverything)
 
 eatEverything = many anyChar
 
@@ -40,7 +45,9 @@ eatEverything = many anyChar
 process :: FilePath -> String -> String
 process file inp = case runParser fileP empty "main" inp of
               Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
-              Right s  -> s
+              Right s  -> case s of
+                    Vanilla v -> v
+                    Annotated h b -> show h ++ show b
 
 
 

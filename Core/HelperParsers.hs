@@ -37,7 +37,7 @@ includeState :: GenParser s st a -> GenParser s st (a,st)
 includeState p = do{ res <- p
                    ; state <- getState
                    ; return (res,state)
-                   } 
+                   }
 
 -- parseTest adepted to accept an initial state
 parseTest p st inp = case runParser (includeState p) st "" inp of
@@ -46,6 +46,4 @@ parseTest p st inp = case runParser (includeState p) st "" inp of
                                           }
                           (Right (x,state))  -> do{ putStr "result: "
                                                   ; print x
-                                                  ; putStr "output state: "
-                                                  ; print state
                                                   }
