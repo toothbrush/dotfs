@@ -49,6 +49,7 @@ data Body   = Seq  Body Body
 data DFSExpr   = Var  VarName
                | Prim Value
                | Sys  String -- maybe this can already be evaluated at parse-time. Ugly though.
+               | If DFSExpr DFSExpr DFSExpr
                | UniOp Op DFSExpr
                | BiOp  Op DFSExpr DFSExpr
                deriving Show

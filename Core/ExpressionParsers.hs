@@ -47,6 +47,7 @@ factor =  parens lex exprP
       <|> ((Prim . VBool) <$> boolTerm)
       <|> ((Prim . VString) <$> stringLiteral lex)
       <|> Var <$> identifier lex
+      <|> ifTerm
       <?> "simple expression or variable"
 
 boolTerm =  do { reservedOp lex "true"
@@ -56,56 +57,18 @@ boolTerm =  do { reservedOp lex "true"
                ; return False
                }
 
--- to factor out some common basics
--- nestExprP :: VarParser a -> VarParser a
--- nestExprP inner =  parens lex inner
---                <|> mkIfP inner
---            --    <|> mkMediumIfP inner
--- 
+ifTerm = do { reservedOp lex "if"
+            ; condition <- parens lex exprP
+            ; symbol lex "{"
+            ; thenbody <- exprP
+            ; symbol lex "}"
+            ; reservedOp lex "else"
+            ; symbol lex "{"
+            ; elsebody <- exprP
+            ; symbol lex "}"
+            ; return (If condition thenbody elsebody)
+            }
 
--- -- the parser for boolean expressions
--- boolExprP :: VarParser Bool
--- boolExprP = buildExpressionParser table prim <?> "boolean expression"
---       where table = [[ pre "!" not ]
---                     ,[ inf "&&" (&&) AssocNone ]
---                     ,[ inf "||" (||) AssocNone ]
---                     ]                       -- a boolean expression can be:
---             prim =  try (nestExprP boolExprP)
---                 <|> try (True  <$ symbol lex "true")       -- constant true
---                 <|> try (False <$ symbol lex "false")      -- constant false
--- 			    <|> try (mkCompP intExprP)                 -- comparator of integers
--- 				<|> boolVarP                               -- variable
--- 
--- 
--- 
--- -- some helpers
--- 
--- intVarP :: VarParser Int
--- intVarP = do{ name <- identifier lex
---             ; map <- getState
---             ; case lookup name map of
---                             Just (Prim (VInt i))  -> return i
---                             Just _         -> fail $ "variable "++name++" is not an integer"
---                             Nothing        -> fail $ "variable "++name++" is undefined"
---             }
--- 
--- boolVarP :: VarParser Bool
--- boolVarP = do{ name <- identifier lex
---              ; map <- getState
---              ; case lookup name map of
---                             Just (Prim(VBool b))     -> return b
---                             Just _             -> fail $ "variable "++name++" is not a booleans"
---                             Nothing            -> fail $ "variable "++name++" is undefined"
---              }
--- 
--- stringVarP :: VarParser String
--- stringVarP = do{ name <- identifier lex
---                ; map <- getState
---                ; case lookup name map of
---                       Just (Prim(VString s))  -> return s
---                       Just _             -> fail $ "variable "++name++" is not a string"
---                       Nothing            -> fail $ "variable "++name++" is undefined"
---                }
 -- 
 -- 
 -- -- the ifP parser generators create a parser of ifstatements of the given type

@@ -58,6 +58,9 @@ commentstyleP = do{ symbol lex "commentstyle"
                   ; return ()
                   }
 
+-- | this parses a shell command. These are denoted by using := instead
+-- of = for assignment. This is because backticks are a pain to parse, and
+-- we prefer the built-in stringLiteral parser.
 shellCommandP :: VarParser ()
 shellCommandP = do { name <- identifier lex
                    ; whiteSpace lex
@@ -68,7 +71,8 @@ shellCommandP = do { name <- identifier lex
                    ; return ()
 }
 
--- stateful assignment parser
+-- | assignState parses an assignment. That is, an identifier, an equals (=)
+-- symbol, and then an expression.
 assignState :: VarParser ()
 assignState = do{ name <- identifier lex
                 ; whiteSpace lex
