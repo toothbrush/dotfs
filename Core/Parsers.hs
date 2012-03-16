@@ -25,20 +25,20 @@ import Util.Helpers
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
 testfile name = do { fc <- readFile name
-                   ; parseTest headerP empty fc
+                   ; parseTest fileP empty fc
                    ; return ()
                    }
 
 
-fileParser :: VarParser String
-fileParser = (try (whiteSpace lex *> headerP *> eatEverything)) -- end with bodyP
-          <|> eatEverything
+fileP :: VarParser String
+fileP = (try (whiteSpace lex *> headerP *> eatEverything)) -- end with bodyP
+     <|> eatEverything
 
 eatEverything = many anyChar
 
 -- run the header parser and evauator, and then the body parser on the result
 process :: FilePath -> String -> String
-process file inp = case runParser fileParser empty "main" inp of
+process file inp = case runParser fileP empty "main" inp of
               Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> s
 
