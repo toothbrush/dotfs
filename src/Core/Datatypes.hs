@@ -6,6 +6,7 @@ import Text.Parsec
 import Text.ParserCombinators.Parsec.Prim
 import Data.Map
 
+
 data Conf = C FilePath deriving Show
 
 -- our threaded parser type
@@ -20,7 +21,7 @@ type DFSState = Map VarName DFSExpr
 data Value = VInt Integer
            | VBool Bool
            | VString String
-           deriving (Eq)
+           deriving Eq
 
 instance Show Value where
   show (VInt    i) = show i
@@ -34,7 +35,6 @@ instance Show Value where
 -- a proper AST for our config files, in other words.
 data Config = Vanilla String
             | Annotated Header Body
-            deriving Show
 
 type Header = DFSState
 
@@ -46,7 +46,6 @@ type Body = [BodyElem]
 data BodyElem = Cond DFSExpr Body
               | Ref  DFSExpr
               | Verb String
-              deriving Show
 
 -- | an expression
 data DFSExpr   = Var  VarName
@@ -55,9 +54,23 @@ data DFSExpr   = Var  VarName
                | If DFSExpr DFSExpr DFSExpr
                | UniOp Op DFSExpr
                | BiOp  Op DFSExpr DFSExpr
-               deriving Show
+               deriving Eq
+
+instance Show DFSExpr where
+  show (Var  n) = n
+  show (Prim v) = show v
+  show (Sys  s) = s
+  show (If c e1 e2) = "if("++show c++"){"++show e1++"}else{" ++ show e2 ++ "}"
+  show (UniOp o e) = show o ++ show e
+  show (BiOp  o e1 e2) = show e1++ show o ++ show e2
+
+
+instance Show Op where
+  show Add = "+"
+
+
 
 data Op     = Add | Sub | Mul | Div
             | Eq  | LTOp| GTOp| LEQ | GEQ | NEQ
             | And | Or  | Not
-            deriving Show
+            deriving Eq
