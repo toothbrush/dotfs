@@ -3,7 +3,6 @@ module Main where
 
 import Test.Utility -- our TH functions
 import Test.Tests -- our test cases
-import Test.Instances
 import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Test

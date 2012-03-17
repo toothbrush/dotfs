@@ -9,8 +9,6 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Char
 import Text.Parsec.Error
-import Text.Parsec.Token as P
-import Text.Parsec.Prim
 import Text.Parsec.Language
 import Text.Parsec.Expr
 

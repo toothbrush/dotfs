@@ -59,12 +59,12 @@ boolTerm =  do { reservedOp lex "true"
 
 ifTerm = do { reservedOp lex "if"
             ; condition <- parens lex exprP
-            ; symbol lex "{"
+            ; _ <- symbol lex "{"
             ; thenbody <- exprP
-            ; symbol lex "}"
+            ; _ <- symbol lex "}"
             ; reservedOp lex "else"
-            ; symbol lex "{"
+            ; _ <- symbol lex "{"
             ; elsebody <- exprP
-            ; symbol lex "}"
+            ; _ <- symbol lex "}"
             ; return (If condition thenbody elsebody)
             }
