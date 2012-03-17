@@ -7,11 +7,50 @@ license:             BSD3
 author:              Sjoerd Timmer and Paul van der Walt
 maintainer:          dotfs@denknerd.org
 homepage:            http://github.com/toothbrush/dotfs
-build-depends:       base
+build-depends:       base,
+                     test-framework >= 0.4.1,
+                     test-framework-quickcheck2,
+                     test-framework-hunit,
+                     quickcheck >= 2.4
 build-type:          Simple
+cabal-version:       >= 1.10
 
-executable:          dotfs
-main-is:             DotFS.hs
-ghc-options:         -threaded
-build-depends:       bytestring >=0.9, haskell98, HFuse >= 0.2.1, directory>=1, unix >= 2.3, filepath >=1.1, parsec, containers, transformers, process
-hs-source-dirs:        src, .
+Test-Suite test-dotfs
+  type:             exitcode-stdio-1.0
+  build-depends:
+                    base >= 4 && < 5,
+                    HUnit >= 1.2 && < 2,
+                    QuickCheck >= 2.4,
+                    test-framework >= 0.4.1,
+                    test-framework-quickcheck2,
+                    test-framework-hunit,
+                    containers,
+                    transformers,
+                    parsec >= 3,
+                    haskell-src,
+                    template-haskell
+  ghc-options:      -Wall -rtsopts
+  hs-source-dirs:   src, .
+  default-language: Haskell98
+  main-is:          Test/Unit.hs
+
+Executable            dotfs
+  if !os(linux)
+    main-is:            Unsupported.hs
+    default-language:   Haskell98
+    hs-source-dirs:     src, .
+    build-depends:      base
+  if os(linux)
+    main-is:            DotFS.hs
+    ghc-options:        -threaded
+    build-depends:      bytestring >=0.9,
+                        haskell98,
+                        HFuse >= 0.2.1,
+                        directory>=1,
+                        unix >= 2.3,
+                        filepath >=1.1,
+                        parsec,
+                        containers,
+                        transformers,
+                        process
+    hs-source-dirs:     src, .
