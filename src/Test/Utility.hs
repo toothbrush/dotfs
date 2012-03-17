@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Utility where
+module Test.Utility where
 
 import Language.Haskell.Syntax
 import Language.Haskell.TH
@@ -14,7 +14,7 @@ import System.IO
   the list.  Requires that Tests.hs be valid Haskell98. -}
 tests :: [String]
 tests = unsafePerformIO $
-  do h <- openFile "tests/Tests.hs" ReadMode
+  do h <- openFile "src/Test/Tests.hs" ReadMode
      s <- hGetContents h
      case parseModule s of
        (ParseOk (HsModule _ _ _ _ ds)) -> return (map declName (filter isProp ds))
@@ -32,7 +32,7 @@ declName (HsFunBind (HsMatch _ (HsIdent name) _ _ _:_)) = name
 declName _                                              = undefined
 
 mkCheck name = [| putStr (name ++ ": ")
-               >> quickCheck $(varE (mkName name)) |]
+               >> verboseCheck $(varE (mkName name)) |]
 
 mkChecks []        = undefined -- if we don't have any tests, then the test suite is undefined right?
 mkChecks [name]    = mkCheck name

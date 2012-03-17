@@ -1,4 +1,4 @@
-module Tests where
+module Test.Tests where
 
 import Core.ExpressionParsers
 import Core.Datatypes
