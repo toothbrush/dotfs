@@ -5,7 +5,7 @@ import Core.Datatypes
 
 import Control.Monad (join)
 import Text.Parsec
-
+import Text.Parsec.String
 
 
 eatEverything :: VarParser String
