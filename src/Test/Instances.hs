@@ -20,4 +20,4 @@ instance Arbitrary DFSExpr where
                    subform  = expr (n `div` 2)
                    subform' = expr (n `div` 4)
                    unioperator = elements [Not]
-                   bioperator  = (elements [Add, Sub, Mul, Div, And, Or, Eq, LTOp, GTOp, GEQ, LEQ, NEQ])
+                   bioperator  = elements [Add, Sub, Mul, Div, And, Or, Eq, LTOp, GTOp, GEQ, LEQ, NEQ]

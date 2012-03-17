@@ -27,7 +27,7 @@ eval s o@(BiOp  _ e1 e2) = evalBi s o
 
 execSystem :: String -> String
 execSystem c = unsafePerformIO $ do (inn,out,err,pid) <- runInteractiveCommand c
-                                    mapM_ (flip hSetBinaryMode False) [inn, out]
+                                    mapM_ (`hSetBinaryMode` False) [inn, out]
                                     hSetBuffering out NoBuffering
                                     parsedIntro <- parseUntilPrompt out
                                     return (concat parsedIntro)
@@ -52,7 +52,7 @@ evalBi :: DFSState -> DFSExpr -> Value
 evalBi s (BiOp Add e1 e2)   = doAdd s e1 e2
 evalBi s (BiOp Sub e1 e2)   = doInt s (-) e1 e2
 evalBi s (BiOp Mul e1 e2)   = doInt s (*) e1 e2
-evalBi s (BiOp Div e1 e2)   = doInt s (div) e1 e2
+evalBi s (BiOp Div e1 e2)   = doInt s div e1 e2
 evalBi s (BiOp Eq  e1 e2)   = let e1' = eval s e1
                                   e2' = eval s e2
                               in VBool $ e1' == e2'

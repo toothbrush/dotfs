@@ -34,15 +34,15 @@ testfile name = do { fc <- readFile name
 
 fileP :: Bool -- ^ whether to force parsing of an annotated file.
       -> VarParser Config
-fileP f = (try (do { whiteSpace lex
+fileP f = try (do { whiteSpace lex
                    ; headerP
                    ; h <- getState
                    ; b <- bodyP
                    ; eof
                    ; return (Annotated h b)
                    }
-                   ))
-       <|> if f then (fail "no header.") else (Vanilla <$> eatEverything)
+                   )
+       <|> if f then fail "no header." else Vanilla <$> eatEverything
 
 -- run the header parser and evaluator, and then the body parser on the result
 process :: FilePath -> String -> String
@@ -54,12 +54,12 @@ process file inp = case runParser (fileP False) empty file inp of
 
 present :: Header -> Body -> String
 present h []     = ""
-present h ((Cond c b):bs) = case eval h c of
+present h (Cond c b:bs) = case eval h c of
                                 VBool True -> outputInfoIf h c ++ present h b ++ outputEndIf h c
                                 _          -> ""
                             ++ present h bs
-present h ((Ref r):bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
-present h ((Verb v):bs)   = v ++ present h bs
+present h (Ref r:bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
+present h (Verb v:bs)   = v ++ present h bs
 
 outputInfoRef :: Header -> DFSExpr -> String
 outputInfoRef h e        = case lookup "commentstart" h of
@@ -67,18 +67,18 @@ outputInfoRef h e        = case lookup "commentstart" h of
                              Just (Prim (VString start)) ->
                                case lookup "commentstop" h of
                                Nothing -> ""
-                               Just (Prim (VString stop)) -> concat $ intersperse " " [start,"ref:",show e,stop]
+                               Just (Prim (VString stop)) -> unwords [start,"ref:",show e,stop]
 outputInfoIf :: Header -> DFSExpr -> String
 outputInfoIf h e        = case lookup "commentstart" h of
                             Nothing -> ""
                             Just (Prim (VString start)) ->
                               case lookup "commentstop" h of
-                              Nothing -> concat $ ["\n",start," if: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"if:",show e,stop])
+                              Nothing -> concat ["\n",start," if: ",show e,"\n"]
+                              Just (Prim (VString stop)) -> unwords [start,"if:",show e,stop]
 outputEndIf :: Header -> DFSExpr -> String
 outputEndIf h e        = case lookup "commentstart" h of
                             Nothing -> ""
                             Just (Prim (VString start)) ->
                               case lookup "commentstop" h of
-                              Nothing -> concat $ ["\n",start," endif: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> (concat $ intersperse " " [start,"endif:",show e,stop])
+                              Nothing -> concat ["\n",start," endif: ",show e,"\n"]
+                              Just (Prim (VString stop)) -> unwords [start,"endif:",show e,stop]

@@ -38,7 +38,7 @@ table = [
     ]
     ]
   where
-    op s f assoc = Infix   (do { reservedOp lex s; return f } <?> "operator") assoc
+    op s f       = Infix   (do { reservedOp lex s; return f } <?> "operator")
     pre s f      = Prefix  (do { reservedOp lex s; return f })
     post s f     = Postfix (do { reservedOp lex s; return f })
 

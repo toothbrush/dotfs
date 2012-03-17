@@ -23,7 +23,7 @@ tests = unsafePerformIO $
 {- | checks if function binding name starts with @prop_@ indicating
  that it is a quickcheck property -}
 isProp :: HsDecl -> Bool
-isProp d@(HsFunBind _) = "prop_" `isPrefixOf` (declName d)
+isProp d@(HsFunBind _) = "prop_" `isPrefixOf` declName d
 isProp _ = False
 
 {- | takes an HsDecl and returns the name of the declaration -}

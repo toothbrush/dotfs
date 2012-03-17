@@ -7,6 +7,7 @@ dotfs: src/DotFS.hs src/Core/*.hs src/Util/*.hs
 	ghc --make src/DotFS.hs -o $@ -threaded -isrc
 
 lint:
+	cabal clean
 	clear; hlint -c **/*.hs
 
 clean:
