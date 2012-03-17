@@ -9,8 +9,8 @@ import Text.Parsec.Char
 import Text.Parsec.Token
 import Text.Parsec.Prim hiding (parseTest)
 
+prop_parseExpr :: DFSExpr -> Bool
 prop_parseExpr xs = xs == testExprP (show xs)
-  where types = xs :: DFSExpr
 
 testExprP :: String -> DFSExpr
 testExprP inp = case runParser exprP empty "expr" inp of

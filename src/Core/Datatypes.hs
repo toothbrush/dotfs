@@ -5,7 +5,8 @@ module Core.Datatypes where
 import Text.Parsec
 import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim
-import Data.Map
+import Data.Map (lookup, fromList, Map)
+import Data.Char (toLower)
 
 import Prelude hiding (lookup)
 
@@ -27,8 +28,8 @@ data Value = VInt Integer
 
 instance Show Value where
   show (VInt    i) = show i
-  show (VBool   b) = show b
-  show (VString s) = s
+  show (VBool   b) = map toLower $ show b
+  show (VString s) = "\"" ++ s ++ "\""
 
 
 -- | a config file is either just a normal file, to be passed
@@ -66,9 +67,9 @@ instance Show DFSExpr where
   show (UniOp o e) = "(" ++ show o ++ show e ++ ")"
   show (BiOp  o e1 e2) = "("++show e1++ show o ++ show e2++")"
 
-
 instance Show Op where
-  show op = fromMaybe "?" (lookup op (fromList
+  show op = (\op -> " "++op++" ") $
+            fromMaybe "?" (lookup op (fromList
             [ (Add, "+")
             , (Sub, "-")
             , (Div, "/")
@@ -83,8 +84,6 @@ instance Show Op where
             , (Or, "||")
             , (Not, "!")
             ]))
-
-
 
 data Op     = Add | Sub | Mul | Div
             | Eq  | LTOp| GTOp| LEQ | GEQ | NEQ

@@ -43,7 +43,7 @@ table = [
     post s f     = Postfix (do { reservedOp lex s; return f })
 
 factor =  parens lex exprP
-      <|> ((Prim . VInt) <$> natural lex)
+      <|> ((Prim . VInt) <$> integer lex)
       <|> ((Prim . VBool) <$> boolTerm)
       <|> ((Prim . VString) <$> stringLiteral lex)
       <|> Var <$> identifier lex

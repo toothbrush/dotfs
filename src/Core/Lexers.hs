@@ -17,7 +17,7 @@ import Text.Parsec.Expr
 
 
 -- stuff about the language and the default lexer
-tagletter = oneOf "~!@#$%^&*_+|`-=\\:\"<>?[]',./"
+tagletter = oneOf "~!@#$%^&*_+|`-=\\:<>?[]',./"
 
 lang :: LanguageDef st
 lang = javaStyle
