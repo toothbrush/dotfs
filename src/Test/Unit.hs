@@ -12,8 +12,5 @@ import System.Exit
 runTests :: IO ()
 runTests = $(mkChecks tests)
 
-
 main :: IO ()
-main = do
-  result <- quickCheckResult prop_parseExpr
-  unless (isSuccess result) exitFailure
+main = runTests
