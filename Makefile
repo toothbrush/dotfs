@@ -10,5 +10,6 @@ lint:
 	clear; hlint -c **/*.hs
 
 clean:
+	cabal clean
 	rm -vf dotfs **/*.hi **/*.o ;
 	rm -vrf dist
