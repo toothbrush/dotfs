@@ -34,11 +34,13 @@ declName :: HsDecl -> String
 declName (HsFunBind (HsMatch _ (HsIdent name) _ _ _:_)) = name
 declName _                                              = undefined
 
+mkCheck :: String -> Q Exp
 mkCheck name = [| putStr (name ++ ": ")
                >> do res <- quickCheckResult $(varE (mkName name))
                      unless (isSuccess res) exitFailure
                |]
 
+mkChecks :: [String] -> Q Exp
 mkChecks []        = undefined -- if we don't have any tests, then the test suite is undefined right?
 mkChecks [name]    = mkCheck name
 mkChecks (name:ns) = [| $(mkCheck name) >> $(mkChecks ns) |]
