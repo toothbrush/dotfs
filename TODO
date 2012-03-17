@@ -1,6 +1,5 @@
 * documentation
 * put current grammar on wiki. shouldn't need to change much now
 * unit testing (esp. of parsing)
-* check if a system call can be done like this "something:= "longstory" + stringvar"
 * error reporting?
 * maybe print environment in comments at the top of the generated file.
