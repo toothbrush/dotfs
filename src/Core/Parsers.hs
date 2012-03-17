@@ -32,20 +32,21 @@ testfile name = do { fc <- readFile name
                    ; return ()
                    }
 
-fileP :: VarParser Config
-fileP = (try (do { whiteSpace lex
-                 ; headerP
-                 ; h <- getState
-                 ; b <- bodyP
-                 ; eof
-                 ; return (Annotated h b)
-                 }
-                 ))
-     <|> (Vanilla <$> eatEverything)
+fileP :: Bool -- ^ whether to force parsing of an annotated file.
+      -> VarParser Config
+fileP f = (try (do { whiteSpace lex
+                   ; headerP
+                   ; h <- getState
+                   ; b <- bodyP
+                   ; eof
+                   ; return (Annotated h b)
+                   }
+                   ))
+       <|> if f then (fail "no header.") else (Vanilla <$> eatEverything)
 
 -- run the header parser and evaluator, and then the body parser on the result
 process :: FilePath -> String -> String
-process file inp = case runParser fileP empty "main" inp of
+process file inp = case runParser (fileP False) empty file inp of
               Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> case s of
                     Vanilla v     -> v
