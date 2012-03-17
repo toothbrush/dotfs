@@ -71,9 +71,10 @@ shellCommandP = do { name <- identifier lex
                    ; whiteSpace lex
                    ; symbol lex ":="
                    ; whiteSpace lex
-                   ; command <- stringLiteral lex
+                   ; command <- exprP
                    ; s <- getState
-                   ; let e = eval s (Sys command)
+                   ; let finalCommand = eval s command
+                   ; let e = eval s (Sys (show finalCommand))
                    ; updateState (insert name (Prim e))
 }
 

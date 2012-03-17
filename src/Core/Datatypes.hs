@@ -52,7 +52,7 @@ data BodyElem = Cond DFSExpr Body
 -- | an expression
 data DFSExpr   = Var  VarName
                | Prim Value
-               | Sys  String -- maybe this can already be evaluated at parse-time. Ugly though.
+               | Sys  String
                | If DFSExpr DFSExpr DFSExpr
                | UniOp Op DFSExpr
                | BiOp  Op DFSExpr DFSExpr
