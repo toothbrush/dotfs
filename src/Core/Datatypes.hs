@@ -2,7 +2,6 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.Datatypes where
 
-import Text.Parsec
 import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim
 import Data.Map (lookup, fromList, Map)
@@ -68,7 +67,7 @@ instance Show DFSExpr where
   show (BiOp  o e1 e2) = "("++show e1++ show o ++ show e2++")"
 
 instance Show Op where
-  show op = (\op -> " "++op++" ") $
+  show op = (\o -> " "++o++" ") $
             fromMaybe "?" (lookup op (fromList
             [ (Add, "+")
             , (Sub, "-")

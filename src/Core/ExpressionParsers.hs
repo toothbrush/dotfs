@@ -3,20 +3,12 @@
 module Core.ExpressionParsers where
 
 import Prelude hiding (lex,lookup)
+import Control.Applicative ((<$>))
 import Core.Datatypes
 import Core.Lexers
-import Data.Map
 import Data.Functor.Identity
-import Core.HelperParsers
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
-import Control.Monad (join)
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Char
-import Text.Parsec.Error
 import Text.Parsec.Token as P
-import Text.Parsec.Prim
-import Text.Parsec.Language
 import Text.Parsec.Expr
 
 exprP :: VarParser DFSExpr

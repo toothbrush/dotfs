@@ -3,14 +3,8 @@ module Core.HelperParsers where
 
 import Core.Datatypes
 
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Control.Monad (join)
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Char
-import Text.Parsec.Error
-import Text.Parsec.Language
-import Text.Parsec.Expr
 
 
 

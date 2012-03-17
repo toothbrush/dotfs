@@ -3,17 +3,10 @@
 module Core.Lexers where
 
 import Prelude hiding (lex)
-import Core.Datatypes
 
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Char
-import Text.Parsec.Error
-import Text.Parsec.Token as P
-import Text.Parsec.Prim
 import Text.Parsec.Language
-import Text.Parsec.Expr
+import Text.Parsec.Token as P
 
 
 -- stuff about the language and the default lexer

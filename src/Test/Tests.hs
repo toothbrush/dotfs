@@ -1,7 +1,6 @@
 module Test.Tests where
 
 import Core.ExpressionParsers
-import Core.Datatypes
 import Text.Parsec hiding (parseTest)
 import Test.QuickCheck.Arbitrary
 import Control.Monad
