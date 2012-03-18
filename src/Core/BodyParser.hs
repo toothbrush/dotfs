@@ -57,7 +57,7 @@ verbBlockP = do{ map <- getState
 
 
 -- helpers to retrieve start and stop tags as string from the state map:
-extractTagStart,extractTagStop :: Map [Char] DFSExpr -> String
+extractTagStart,extractTagStop :: Map String DFSExpr -> String
 extractTagStart m = case lookup "tagstart" m of
                        Just (Prim (VString s)) -> s
                        _                -> "<<"
