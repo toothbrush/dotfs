@@ -28,6 +28,7 @@ dirExists  path name = doesDirectoryExist $ path </> name
 getFileStats, getDirStats :: FilePath-> FilePath -> IO DotFS
 getFileStats path name = do p <- canonicalizePath $ path </> name
                             getStats RegularFile p
+				-- TODO: add SymbolicLink option here...
 getDirStats  path name = do p <- canonicalizePath $ path </> name
                             getStats Directory p
 
@@ -51,10 +52,11 @@ getStats entrytype uri = do
       fd <- readFile uri
       let parsed = process uri fd
       return $ fromIntegral (length parsed)
+    SymbolicLink -> return 10
   return DotFS {
       dotfsEntryName   = takeFileName uri
     , dotfsActualPath  = uri
-    , dotfsVirtualPath = ""
+    , dotfsVirtualPath = "" -- uri -- "test"
     , dotfsFileStat    = FileStat
         { statEntryType = entrytype
         , statFileMode  = fileMode status
@@ -96,7 +98,7 @@ dotFSOps dir =
                  , fuseReadDirectory      = dotfsReadDirectory dir
                  , fuseRead               = dotfsRead dir
                  , fuseOpen               = dotfsOpen dir
-                 --, fuseReadSymbolicLink   = dotfsReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
+--                 , fuseReadSymbolicLink   = dotfsReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
                  }
 
 
