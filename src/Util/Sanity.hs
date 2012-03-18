@@ -19,7 +19,7 @@ validateDirs dirs =
                           return (mountpoint, C confdir)
                          else do
                            hPutStrLn stderr "Wrong number of arguments"
-                           printHelp defaultOptions
+                           _ <- printHelp defaultOptions
                            exitWith $ ExitFailure 1
 
 

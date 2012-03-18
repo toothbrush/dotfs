@@ -9,7 +9,6 @@ import System.Process
 import System.IO.Unsafe
 
 import Core.Datatypes
-import Data.Maybe
 import Data.Map
 
 eval :: DFSState -> DFSExpr -> Value
@@ -65,25 +64,43 @@ evalBi s (BiOp NEQ  e1 e2)  = let e1' = eval s e1
                               in VBool $ e1' /= e2'
 evalBi s (BiOp And  e1 e2)  = doBool s (&&) e1 e2
 evalBi s (BiOp Or   e1 e2)  = doBool s (||) e1 e2
+evalBi s _                  = VBool False
 
+doAdd :: DFSState -> DFSExpr -> DFSExpr -> Value
 doAdd s a b   = let e1 = eval s a
                     e2 = eval s b
                 in  f e1 e2
                 where f (VString s1) (VString s2) = VString $ s1 ++ s2
                       f (VInt    i1) (VInt    i2) = VInt $ i1 +  i2
                       f _            _            = VInt 0
+
+doInt :: DFSState
+      -> (Integer -> Integer -> Integer)
+      -> DFSExpr
+      -> DFSExpr
+      -> Value
 doInt s f a b = let e1' = eval s a
                     e2' = eval s b
                 in  e1' `handle` e2'
                 where handle (VInt a) (VInt b) = VInt $ f a b
                       handle _ _ = VInt 0
 
+doIntBool :: DFSState
+                            -> (Integer -> Integer -> Bool)
+                            -> DFSExpr
+                            -> DFSExpr
+                            -> Value
 doIntBool s f a b = let e1' = eval s a
                         e2' = eval s b
                     in  e1' `handle` e2'
                     where handle (VInt a) (VInt b) = VBool $ f a b
                           handle _ _ = VBool False
 
+doBool :: DFSState
+                         -> (Bool -> Bool -> Bool)
+                         -> DFSExpr
+                         -> DFSExpr
+                         -> Value
 doBool s f a b = let e1' = eval s a
                      e2' = eval s b
                  in  e1' `handle` e2'

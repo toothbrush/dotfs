@@ -8,21 +8,15 @@ import Core.Datatypes
 import Core.HeaderParser (headerP)
 import Core.HelperParsers
 import Core.Lexers
-import Core.ExpressionParsers
 import Core.ExpressionEvaluator
 import Core.BodyParser
 
 import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
 import Text.Parsec hiding (parseTest)
-import Text.Parsec.String
-import Text.Parsec.Char
 import Text.Parsec.Token
-import Text.Parsec.Prim hiding (parseTest)
 
 import Data.Map
-import Data.List (intersperse)
 
-import Util.Helpers
 
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
@@ -68,6 +62,8 @@ outputInfoRef h e        = case lookup "commentstart" h of
                                case lookup "commentstop" h of
                                Nothing -> ""
                                Just (Prim (VString stop)) -> unwords [start,"ref:",show e,stop]
+                               _ -> ""
+                             _ -> ""
 outputInfoIf :: Header -> DFSExpr -> String
 outputInfoIf h e        = case lookup "commentstart" h of
                             Nothing -> ""
@@ -75,6 +71,8 @@ outputInfoIf h e        = case lookup "commentstart" h of
                               case lookup "commentstop" h of
                               Nothing -> concat ["\n",start," if: ",show e,"\n"]
                               Just (Prim (VString stop)) -> unwords [start,"if:",show e,stop]
+                              _ -> ""
+                            _ -> ""
 outputEndIf :: Header -> DFSExpr -> String
 outputEndIf h e        = case lookup "commentstart" h of
                             Nothing -> ""
@@ -82,3 +80,5 @@ outputEndIf h e        = case lookup "commentstart" h of
                               case lookup "commentstop" h of
                               Nothing -> concat ["\n",start," endif: ",show e,"\n"]
                               Just (Prim (VString stop)) -> unwords [start,"endif:",show e,stop]
+                              _ -> ""
+                            _ -> ""

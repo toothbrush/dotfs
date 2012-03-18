@@ -11,15 +11,9 @@ import Core.HelperParsers
 
 import Data.Map
 
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
+import Control.Applicative ((<$>))
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Char
-import Text.Parsec.Error
 import Text.Parsec.Token as P
-import Text.Parsec.Prim
-import Text.Parsec.Language
-import Text.Parsec.Expr
 
 
 bodyP :: VarParser Body
@@ -32,26 +26,26 @@ blockP =  try conditionalBlockP
 
 
 conditionalBlockP :: VarParser BodyElem
-conditionalBlockP = do{ map <- getState
-                      ; symbol lex (extractTagStart map)
-                      ; symbol lex "if"
+conditionalBlockP = do{ state <- getState
+                      ; _ <- symbol lex (extractTagStart state)
+                      ; _ <- symbol lex "if"
                       ; cond <- exprP
-                      ; string (extractTagStop map)
+                      ; _ <- string (extractTagStop state)
                       ; content <- bodyP
-                      ; symbol lex (extractTagStart map)
-                      ; symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
-                      ; string (extractTagStop map)
+                      ; _ <- symbol lex (extractTagStart state)
+                      ; _ <- symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
+                      ; _ <- string (extractTagStop state)
                       ; return $ Cond cond content
                       }
 
 exprBlockP :: VarParser BodyElem
-exprBlockP = do{ map <- getState
-              ; symbol lex (extractTagStart map)
-              ; symbol lex "var"
-              ; var <- exprP
-              ; string (extractTagStop map)
-              ; return $ Ref var
-              }
+exprBlockP = do{ state <- getState
+               ; _ <- symbol lex (extractTagStart state)
+               ; _ <- symbol lex "var"
+               ; var <- exprP
+               ; _ <- string (extractTagStop state)
+               ; return $ Ref var
+               }
 
 
 verbBlockP :: VarParser BodyElem
@@ -63,6 +57,7 @@ verbBlockP = do{ map <- getState
 
 
 -- helpers to retrieve start and stop tags as string from the state map:
+extractTagStart,extractTagStop :: Map [Char] DFSExpr -> String
 extractTagStart m = case lookup "tagstart" m of
                        Just (Prim (VString s)) -> s
                        _                -> "<<"

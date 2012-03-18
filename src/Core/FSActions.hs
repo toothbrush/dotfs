@@ -13,15 +13,9 @@ import System.Posix.Files
 import System.FilePath.Posix
 import System.Posix.IO
 import System.Directory
-import System.Console.GetOpt
-import System.Exit
-import System.Environment
-import System.IO
 import System.Fuse
 import Control.Monad
-import Data.Maybe
-import Data.List (nub)
-import Data.ByteString.Char8 (pack,unpack)
+import Data.ByteString.Char8 (pack)
 
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
@@ -142,8 +136,8 @@ dotfsLookUp (C confdir) path = do
 
 dotfsGetFileStat :: Conf -> FilePath -> IO (Either Errno FileStat)
 dotfsGetFileStat dp (_:dir) = do
-  lookup <- dotfsLookUp dp dir
-  case lookup of
+  lkup <- dotfsLookUp dp dir
+  case lkup of
     Just file -> return $ Right $ dotfsFileStat file
     Nothing   -> return $ Left eNOENT
 

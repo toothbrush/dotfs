@@ -10,6 +10,7 @@ import System.IO
 data Options = Options {optLog :: String}
 
 
+defaultOptions :: Options
 defaultOptions = Options { optLog = undefined }
 
 
