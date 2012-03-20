@@ -44,4 +44,4 @@ main = do
   (mp, dirs) <- validateDirs dirList
   hPutStrLn stderr ("Mountpoint = \t "++mp)
   hPutStrLn stderr ("     Conf  = \t "++show dirs)
-  withArgs (mp:fuseargs) $ fuseMain (dotFSOps dirs) defaultExceptionHandler
+  withArgs (mp:fuseargs) $ fuseMain (dotFSOps mp dirs) defaultExceptionHandler

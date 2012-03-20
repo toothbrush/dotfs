@@ -19,6 +19,8 @@ type VarName = String
 
 type DFSState = Map VarName DFSExpr
 
+type Mountpoint = FilePath
+
 -- | primitives
 data Value = VInt Integer
            | VBool Bool
