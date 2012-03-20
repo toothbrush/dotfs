@@ -54,7 +54,7 @@ exprBlockP = do{ state <- getState
 
 verbBlockP :: VarParser BodyElem
 verbBlockP = do{ state <- getState
-               ; let opentag = const () <$> string (extractTagStart state)
+               ; let opentag = const () <$> try (string (extractTagStart state))
                      endofVerb = lookAhead (eof <|> opentag)
                  in Verb <$> many1Till anyChar endofVerb
                }
