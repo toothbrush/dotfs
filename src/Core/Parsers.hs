@@ -28,27 +28,16 @@ testfile name = do { fc <- readFile name
                    ; return ()
                    }
 
-fileP :: Bool -- ^ whether to force parsing of an annotated file.
-      -> VarParser Config
-fileP f = try (do { whiteSpace lex
-                   ; headerP
-                   ; h <- getState
-                   ; b <- bodyP
-                   ; eof
-                   ; return (Annotated h b)
-                   }
-                   )
-       <|> if f then fail "no header." else Vanilla <$> eatEverything
 
 -- run the header parser and evaluator, and then the body parser on the result
 process :: FilePath -> ByteString -> ByteString
 process file contents =
                        let inp = unpack contents in
-                         case runParser (fileP True) empty file inp of
-                         Left err -> pack$ "error = \n" ++ show (errorPos err) ++ "\n"
-                         Right s  -> case s of
-                               Vanilla _     -> contents
-                               Annotated h b -> pack$ present h b
+                         case runParser headerP empty file inp of
+                             Left err  -> contents
+                             Right h   -> case runParser bodyP empty file inp of
+                                Left err -> pack $ "state = \n" ++ show h ++ "\n" ++ "error = \n" ++ show err ++ "\n"
+                                Right bs -> pack $ present h bs
 
 present :: Header -> Body -> String
 present _ []     = ""
@@ -59,6 +48,7 @@ present h (Cond c b:bs) = case eval h c of
 present h (Ref r:bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
 present h (Verb v:bs)   = v ++ present h bs
 
+-- TODO: this clearly needs cleaning up, merging, and putting in a correct place.
 outputInfoRef :: Header -> DFSExpr -> String
 outputInfoRef h e        = case lookup "commentstart" h of
                              Nothing -> ""

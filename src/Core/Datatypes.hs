@@ -37,8 +37,9 @@ instance Show Value where
 -- through unchanged, or else it's an annotated file with a header
 -- and a body.
 -- a proper AST for our config files, in other words.
-data Config = Vanilla String
+data Config = Vanilla
             | Annotated Header Body
+            deriving Show
 
 type Header = DFSState
 
@@ -50,6 +51,7 @@ type Body = [BodyElem]
 data BodyElem = Cond DFSExpr Body
               | Ref  DFSExpr
               | Verb String
+              deriving Show
 
 -- | an expression
 data DFSExpr   = Var  VarName

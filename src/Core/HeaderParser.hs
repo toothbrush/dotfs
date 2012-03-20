@@ -8,6 +8,7 @@ import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
 import Core.ExpressionEvaluator
+import Core.HelperParsers (eatEverything)
 
 import Control.Applicative ((<*))
 import Text.Parsec hiding (parseTest)
@@ -15,12 +16,13 @@ import Text.Parsec.Token as P
 import Data.Map
 
 -- parse the header, no whitespace around it is eaten
-headerP:: VarParser ()
+headerP :: VarParser DFSState
 headerP = do { _ <- symbol lex "<<dotfs"
              ; whiteSpace lex
              ; _ <- many assignmentP
              ; _ <- string ">>"
-             ; return ()
+             ; state <- getState
+             ; return state
              }
 
 -- parse an assignment
