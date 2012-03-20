@@ -42,10 +42,10 @@ factor =  parens lex exprP
       <|> ifTerm
       <?> "simple expression or variable"
 
-boolTerm =  do { reservedOp lex "true"
+boolTerm =  do { symbol lex "true"
                ; return True
                }
-        <|> do { reservedOp lex "false"
+        <|> do { symbol lex "false"
                ; return False
                }
 
