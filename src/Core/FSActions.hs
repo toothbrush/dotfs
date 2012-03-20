@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module Core.FSActions where
 
 import Core.Datatypes
@@ -15,42 +14,56 @@ import System.Posix.IO
 import System.Directory
 import System.Fuse
 import Control.Monad
-import Data.ByteString.Char8 (pack)
+
+import Data.List (intersperse)
+
+import Prelude hiding (readFile, length)
+import Data.ByteString.Char8 hiding (notElem, map, filter, drop, take, intersperse, concat)
 
 dirContents :: FilePath -> IO [FilePath]
-dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
+dirContents fp = do
+                contents <- getDirectoryContents fp
+                debug $ (concat (intersperse "," contents))
+                return $ (filter (`notElem` [".",".."])) contents
 
 fileExists, dirExists :: FilePath -> FilePath -> IO Bool
 fileExists path name = doesFileExist $ path </> name
 dirExists  path name = doesDirectoryExist $ path </> name
 
 
-getFileStats, getDirStats :: FilePath-> FilePath -> IO DotFS
-getFileStats path name = do p <- canonicalizePath $ path </> name
-                            getStats RegularFile p
-getDirStats  path name = do p <- canonicalizePath $ path </> name
-                            getStats Directory p
-
+getGenStats :: FilePath -> FilePath -> IO DotFS
+getGenStats path name = do p' <- canonicalizePath $ path </> name
+                           let p = path </> name
+                           st <- getSymbolicLinkStatus p
+                           if isDirectory st then
+                               getStats Directory p
+                           else if isSymbolicLink st then
+                               getStats SymbolicLink p
+                           else --  isRegularFile st then
+                               getStats RegularFile p
 
 getStats :: EntryType -> FilePath -> IO DotFS
 getStats entrytype uri = do
-  status <- getFileStatus uri
+  status <- getSymbolicLinkStatus uri
   children <- case entrytype of
     Directory -> do contents <- dirContents uri
                     -- list of files
                     files    <- filterM (fileExists uri) contents
-                    fileList <- mapM (getFileStats uri) files
+                    fileList <- mapM (getGenStats uri) files
                     -- list of directories
                     dirs     <- filterM (dirExists uri) contents
-                    dirList  <- mapM (getDirStats uri) dirs
+                    dirList  <- mapM (getGenStats uri) dirs
                     return $ dirList ++ fileList
     RegularFile -> return []
+    _           -> return [] -- symlinks etc etc
   sz <- case entrytype of
     Directory -> return $ fileSize status
     RegularFile -> do
       fd <- readFile uri
       let parsed = process uri fd
       return $ fromIntegral (length parsed)
+    SymbolicLink -> do return 42
+    _ -> return 0
   return DotFS {
       dotfsEntryName   = takeFileName uri
     , dotfsActualPath  = uri
@@ -77,18 +90,18 @@ statIfExists dir file = do
                           existsAsDir <- dir `dirExists` file
                           if existsAsDir then
                                       do debug $ file ++ " is a dir in "++dir
-                                         stats <- dir `getDirStats` file
+                                         stats <- dir `getGenStats` file
                                          return $ Just stats -- this already contains the children
                              else
                                       do existsAsFile <- dir `fileExists` file
                                          if existsAsFile then do
                                                        debug $ file ++ " is a file in " ++ dir
-                                                       stats <- dir `getFileStats` file
+                                                       stats <- dir `getGenStats` file
                                                        return $ Just stats
                                             else return Nothing
 
-dotFSOps :: Conf -> FuseOperations String
-dotFSOps dir =
+dotFSOps :: Mountpoint -> Conf -> FuseOperations String
+dotFSOps mp dir =
   defaultFuseOps {
                    fuseGetFileStat        = dotfsGetFileStat dir
                  , fuseGetFileSystemStats = dotfsGetFileSystemStats dir
@@ -96,9 +109,20 @@ dotFSOps dir =
                  , fuseReadDirectory      = dotfsReadDirectory dir
                  , fuseRead               = dotfsRead dir
                  , fuseOpen               = dotfsOpen dir
-                 --, fuseReadSymbolicLink   = dotfsReadSymbolicLink dir -- symlinks already work out the box, but don't present nicely in `ls -la`
+                 , fuseReadSymbolicLink   = dotfsReadSymbolicLink dir mp
                  }
 
+{- | here's quite a bit of logic: we want symlinks to be presented as
+ - such, but we would also like links pointing outside the repo to work.
+ -}
+dotfsReadSymbolicLink :: Conf -> Mountpoint -> FilePath -> IO (Either Errno FilePath)
+dotfsReadSymbolicLink (C confdir) mp path = do
+                                              let absPathToLink = normalise $ confdir ++ "/" ++ path
+                                              linkDestination <- readSymbolicLink absPathToLink
+                                              let mountedDestination = mp </> linkDestination
+                                              let finalDestination = normalise mountedDestination
+                                              let answer = makeRelative mp finalDestination
+                                              return $ Right answer
 
 {- possible FUSE operations:
  -- | Implements Unix98 @pread(2)@. It differs from
@@ -152,7 +176,7 @@ dotfsOpen dirs (_:path) ReadOnly flags = do
       fd <- readFile (dotfsActualPath f)
 
       let parsed = process path fd
-      return (Right parsed)
+      return (Right $ unpack parsed)
     Nothing -> return (Left eNOENT)
 dotfsOpen dirs (_:path) mode flags = return (Left eACCES)
 
@@ -171,7 +195,7 @@ dotfsReadDirectory dirs@(C confdir) (_:dir) = do
     Just e -> do
         let contents = dotfsContents e
         let dirContents = map (\x -> (dotfsEntryName x :: String , dotfsFileStat x)) contents
-        dotstats <- confdir `getDirStats` dir
+        dotstats <- confdir `getGenStats` dir
         return $ Right $ [ (".", dotfsFileStat dotstats), ("..", dirStat)] ++ dirContents
 
 dotfsRead  :: Conf -> FilePath -> String -> ByteCount -> FileOffset -> IO (Either Errno B.ByteString)

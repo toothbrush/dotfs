@@ -2,7 +2,7 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.Parsers where
 
-import Prelude hiding (lex, lookup)
+import Prelude hiding (lex, lookup, readFile, putStrLn)
 
 import Core.Datatypes
 import Core.HeaderParser (headerP)
@@ -11,12 +11,14 @@ import Core.Lexers
 import Core.ExpressionEvaluator
 import Core.BodyParser
 
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
+import Control.Applicative ((<$>))
 import Text.Parsec hiding (parseTest)
 import Text.Parsec.Token
 
 import Data.Map
 
+import Data.ByteString.Char8 (unpack, pack, ByteString)
+import Data.ByteString (readFile, putStrLn)
 
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
@@ -26,35 +28,30 @@ testfile name = do { fc <- readFile name
                    ; return ()
                    }
 
-fileP :: Bool -- ^ whether to force parsing of an annotated file.
-      -> VarParser Config
-fileP f = try (do { whiteSpace lex
-                   ; headerP
-                   ; h <- getState
-                   ; b <- bodyP
-                   ; eof
-                   ; return (Annotated h b)
-                   }
-                   )
-       <|> if f then fail "no header." else Vanilla <$> eatEverything
 
 -- run the header parser and evaluator, and then the body parser on the result
-process :: FilePath -> String -> String
-process file inp = case runParser (fileP False) empty file inp of
-              Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
-              Right s  -> case s of
-                    Vanilla v     -> v
-                    Annotated h b -> present h b
+process :: FilePath -> ByteString -> ByteString
+process file contents =
+                       let inp = unpack contents in
+                         case runParser headerP empty file inp of
+                             Left err  -> contents
+                             Right h   -> case runParser bodyP empty file inp of
+                                Left err -> pack $ "state = \n" ++ showMap h ++ "\n" ++ "error = \n" ++ show err ++ "\n"
+                                Right bs -> pack $ present h bs
+
+showMap :: Map VarName DFSExpr -> String
+showMap = foldrWithKey (\k v -> (++) $ show k ++ " = " ++ show v ++ "\n" ) ""
 
 present :: Header -> Body -> String
-present h []     = ""
+present _ []     = ""
 present h (Cond c b:bs) = case eval h c of
                                 VBool True -> outputInfoIf h c ++ present h b ++ outputEndIf h c
-                                _          -> ""
+                                _          -> outputFalseIf h c
                             ++ present h bs
 present h (Ref r:bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
 present h (Verb v:bs)   = v ++ present h bs
 
+-- TODO: this clearly needs cleaning up, merging, and putting in a correct place.
 outputInfoRef :: Header -> DFSExpr -> String
 outputInfoRef h e        = case lookup "commentstart" h of
                              Nothing -> ""
@@ -64,6 +61,15 @@ outputInfoRef h e        = case lookup "commentstart" h of
                                Just (Prim (VString stop)) -> unwords [start,"ref:",show e,stop]
                                _ -> ""
                              _ -> ""
+outputFalseIf :: Header -> DFSExpr -> String
+outputFalseIf h e       = case lookup "commentstart" h of
+                            Nothing -> ""
+                            Just (Prim (VString start)) ->
+                              case lookup "commentstop" h of
+                              Nothing -> concat ["\n",start," hiding block because: \n",start,"false == ",show e,"\n"]
+                              Just (Prim (VString stop)) -> unwords [start,"evals to false: ",show e,stop]
+                              _ -> ""
+                            _ -> ""
 outputInfoIf :: Header -> DFSExpr -> String
 outputInfoIf h e        = case lookup "commentstart" h of
                             Nothing -> ""

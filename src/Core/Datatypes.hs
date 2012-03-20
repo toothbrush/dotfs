@@ -1,10 +1,9 @@
-{-# LANGUAGE GADTs, ExistentialQuantification #-}
-{-# LANGUAGE Haskell98 #-}
+{-# LANGUAGE GADTs, ExistentialQuantification, FlexibleInstances #-}
 module Core.Datatypes where
 
 import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim
-import Data.Map (lookup, fromList, Map)
+import Data.Map (lookup, fromList, Map, foldrWithKey)
 import Data.Char (toLower)
 
 import Prelude hiding (lookup)
@@ -18,6 +17,8 @@ type VarParser a = GenParser Char DFSState a
 type VarName = String
 
 type DFSState = Map VarName DFSExpr
+
+type Mountpoint = FilePath
 
 -- | primitives
 data Value = VInt Integer
@@ -35,8 +36,9 @@ instance Show Value where
 -- through unchanged, or else it's an annotated file with a header
 -- and a body.
 -- a proper AST for our config files, in other words.
-data Config = Vanilla String
+data Config = Vanilla
             | Annotated Header Body
+            deriving Show
 
 type Header = DFSState
 
@@ -48,6 +50,7 @@ type Body = [BodyElem]
 data BodyElem = Cond DFSExpr Body
               | Ref  DFSExpr
               | Verb String
+              deriving Show
 
 -- | an expression
 data DFSExpr   = Var  VarName

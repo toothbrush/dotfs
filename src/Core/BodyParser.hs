@@ -8,21 +8,25 @@ import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
 import Core.HelperParsers
+import Core.HeaderParser
 
 import Data.Map
 
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (<*), (*>), (<$), (<*>))
 import Text.Parsec
 import Text.Parsec.Token as P
 
 
 bodyP :: VarParser Body
-bodyP = many blockP
+bodyP = id <$ headerP *> blocksP <* eof <?> "body with annotations"
+
+blocksP :: VarParser Body
+blocksP = many blockP
 
 blockP :: VarParser BodyElem
 blockP =  try conditionalBlockP
       <|> try exprBlockP
-      <|> verbBlockP
+      <|> verbBlockP <?> "body element (if, reference or verbatim)"
 
 
 conditionalBlockP :: VarParser BodyElem
@@ -31,7 +35,7 @@ conditionalBlockP = do{ state <- getState
                       ; _ <- symbol lex "if"
                       ; cond <- exprP
                       ; _ <- string (extractTagStop state)
-                      ; content <- bodyP
+                      ; content <- blocksP
                       ; _ <- symbol lex (extractTagStart state)
                       ; _ <- symbol lex "endif" <|> symbol lex "/if" <|> symbol lex "fi"
                       ; _ <- string (extractTagStop state)
