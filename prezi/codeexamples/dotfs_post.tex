@@ -1,3 +1,7 @@
+\documentclass{minimal}
+\usepackage{tikz}
+\usepackage[T1]{fontenc}
+
 \usetikzlibrary{fadings}
 
 \definecolor{boxbot}{RGB}{49,139,255}
@@ -31,6 +35,8 @@
 \newcommand\rtag{\textcolor{op}{>\hbox{}>}}
 \newcommand\sem{\textcolor{ln}{;}}
 
+\begin{document}
+
 \tikzstyle{every node}=[font=\normalfont]
 \begin{tikzpicture}[
 box/.style={
@@ -49,7 +55,7 @@ normwidth/.style={
 \node[box] {\resetlnr
 \lnr\ltag \op{dotfs}\\
 \lnr~~\kw{mybase} \op= \op{if(} \val{hostname}\op{==}\str{"work"} \op{)\{}\num{8}\op{\}\{}\num{10}\op{\}}\sem\\
-\lnr~~\kw{syscolors} \op{:=} \str{"/usr/bin/testcolors --count"}\sem\\
+\lnr~~\kw{syscolors} \op{:=} \str{"/usr/bin/testcolors ---count"}\sem\\
 \lnr~~\kw{theme} \op= \op{if(} \kw{syscolors}\op{>=}\num{16} \op{)\{}\str{"pleiades"}\op{\}\{}\str{"jura"}\op{\}}\sem\\
 \lnr~~\kw{version} \op{:=} \str{"abacus -\hbox{}-version"}\sem\\
 \lnr\rtag\\
@@ -68,6 +74,6 @@ normwidth/.style={
 %\lnr colortheme = "jura"
 %};
 
-
-
 \end{tikzpicture}
+
+\end{document}
