@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module Core.FSActions where
 
 import Core.Datatypes
@@ -15,7 +14,9 @@ import System.Posix.IO
 import System.Directory
 import System.Fuse
 import Control.Monad
-import Data.ByteString.Char8 (pack)
+
+import Prelude hiding (readFile, length)
+import Data.ByteString.Char8 hiding (notElem, map, filter, drop, take)
 
 dirContents :: FilePath -> IO [FilePath]
 dirContents = fmap (filter (`notElem` [".",".."])) . getDirectoryContents
@@ -152,7 +153,7 @@ dotfsOpen dirs (_:path) ReadOnly flags = do
       fd <- readFile (dotfsActualPath f)
 
       let parsed = process path fd
-      return (Right parsed)
+      return (Right $ unpack parsed)
     Nothing -> return (Left eNOENT)
 dotfsOpen dirs (_:path) mode flags = return (Left eACCES)
 

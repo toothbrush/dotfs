@@ -2,7 +2,7 @@
 {-# LANGUAGE Haskell98 #-}
 module Core.Parsers where
 
-import Prelude hiding (lex, lookup)
+import Prelude hiding (lex, lookup, readFile, putStrLn)
 
 import Core.Datatypes
 import Core.HeaderParser (headerP)
@@ -11,12 +11,14 @@ import Core.Lexers
 import Core.ExpressionEvaluator
 import Core.BodyParser
 
-import Control.Applicative ((<*),(<$>),(<*>),(*>),(<$))
+import Control.Applicative ((<$>))
 import Text.Parsec hiding (parseTest)
 import Text.Parsec.Token
 
 import Data.Map
 
+import Data.ByteString.Char8 (unpack, pack, ByteString)
+import Data.ByteString (readFile, putStrLn)
 
 -- test the parsing on a given file
 testfile :: FilePath -> IO ()
@@ -39,15 +41,17 @@ fileP f = try (do { whiteSpace lex
        <|> if f then fail "no header." else Vanilla <$> eatEverything
 
 -- run the header parser and evaluator, and then the body parser on the result
-process :: FilePath -> String -> String
-process file inp = case runParser (fileP False) empty file inp of
-              Left err -> "error = \n" ++ show (errorPos err) ++ "\n"
+process :: FilePath -> ByteString -> ByteString
+process file contents =
+              let inp = unpack contents in
+              case runParser (fileP False) empty file inp of
+              Left err -> pack$ "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> case s of
-                    Vanilla v     -> v
-                    Annotated h b -> present h b
+                    Vanilla _     -> contents
+                    Annotated h b -> pack$ present h b
 
 present :: Header -> Body -> String
-present h []     = ""
+present _ []     = ""
 present h (Cond c b:bs) = case eval h c of
                                 VBool True -> outputInfoIf h c ++ present h b ++ outputEndIf h c
                                 _          -> ""
