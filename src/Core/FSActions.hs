@@ -40,7 +40,7 @@ getGenStats path name = do p' <- canonicalizePath $ path </> name
                            else if isSymbolicLink st then
                                getStats SymbolicLink p
                            else --  isRegularFile st then
-                           getStats RegularFile p
+                               getStats RegularFile p
 
 getStats :: EntryType -> FilePath -> IO DotFS
 getStats entrytype uri = do
