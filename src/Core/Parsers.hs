@@ -36,8 +36,11 @@ process file contents =
                          case runParser headerP empty file inp of
                              Left err  -> contents
                              Right h   -> case runParser bodyP empty file inp of
-                                Left err -> pack $ "state = \n" ++ show h ++ "\n" ++ "error = \n" ++ show err ++ "\n"
+                                Left err -> pack $ "state = \n" ++ showMap h ++ "\n" ++ "error = \n" ++ show err ++ "\n"
                                 Right bs -> pack $ present h bs
+
+showMap :: Map VarName DFSExpr -> String
+showMap = foldrWithKey (\k v -> (++) $ show k ++ " = " ++ show v ++ "\n" ) ""
 
 present :: Header -> Body -> String
 present _ []     = ""
