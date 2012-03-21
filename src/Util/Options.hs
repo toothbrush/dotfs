@@ -19,7 +19,7 @@ options =
   [ Option "V?" ["version"] (NoArg printVersion) "show version number"
   , Option "l"  ["log"] (ReqArg (\ arg opt -> return opt {optLog = arg})
                           "FILE") "write log to FILE"
-  , Option "h"  ["help"] (NoArg printHelp) "show help message"
+  , Option "h"  ["help"] (NoArg printHelp) "show this help message"
   ]
 
 
@@ -34,7 +34,7 @@ printHelp _ = do
 
 printVersion :: Options -> IO Options
 printVersion _ = do
-  hPutStrLn stderr $ "Version " ++ version
+  hPutStrLn stderr $ "DotFS v" ++ version++"\n\nCopyright 2012 Sjoerd Timmer, Paul van der Walt"
   exitSuccess
 
 
