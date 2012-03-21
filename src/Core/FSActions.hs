@@ -15,16 +15,16 @@ import System.Directory
 import System.Fuse
 import Control.Monad
 
-import Data.List (intersperse)
+import Data.List (intersperse, intercalate)
 
 import Prelude hiding (readFile, length)
-import Data.ByteString.Char8 hiding (notElem, map, filter, drop, take, intersperse, concat)
+import Data.ByteString.Char8 hiding (notElem, map, filter, drop, take, intersperse, concat, intercalate)
 
 dirContents :: FilePath -> IO [FilePath]
 dirContents fp = do
                 contents <- getDirectoryContents fp
-                debug $ (concat (intersperse "," contents))
-                return $ (filter (`notElem` [".",".."])) contents
+                debug (intercalate "," contents)
+                return $ filter (`notElem` [".",".."]) contents
 
 fileExists, dirExists :: FilePath -> FilePath -> IO Bool
 fileExists path name = doesFileExist $ path </> name
@@ -36,11 +36,12 @@ getGenStats path name = do p' <- canonicalizePath $ path </> name
                            let p = path </> name
                            st <- getSymbolicLinkStatus p
                            if isDirectory st then
-                               getStats Directory p
-                           else if isSymbolicLink st then
-                               getStats SymbolicLink p
-                           else --  isRegularFile st then
-                               getStats RegularFile p
+                             getStats Directory p
+                             else
+                               if isSymbolicLink st then
+                                   getStats SymbolicLink p
+                               else --  isRegularFile st then
+                                   getStats RegularFile p
 
 getStats :: EntryType -> FilePath -> IO DotFS
 getStats entrytype uri = do
@@ -62,7 +63,7 @@ getStats entrytype uri = do
       fd <- readFile uri
       let parsed = process uri fd
       return $ fromIntegral (length parsed)
-    SymbolicLink -> do return 42
+    SymbolicLink -> return 42
     _ -> return 0
   return DotFS {
       dotfsEntryName   = takeFileName uri

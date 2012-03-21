@@ -20,7 +20,8 @@ import Data.Map
 import Data.ByteString.Char8 (unpack, pack, ByteString)
 import Data.ByteString (readFile, putStrLn)
 
--- test the parsing on a given file
+-- | Test-process a given file, and show the result.
+-- Especially useful for testing in combination with GHCi.
 testfile :: FilePath -> IO ()
 testfile name = do { fc <- readFile name
                    ; let output = process name fc
