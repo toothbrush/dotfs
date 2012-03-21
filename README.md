@@ -47,6 +47,5 @@ where MOUNTPOINT and CONFDIR are paths.
 OPTIONS:
 
 *  -h
-*  -?    print help
 *  -V    print version
 
