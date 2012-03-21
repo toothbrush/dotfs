@@ -39,52 +39,21 @@ process file contents =
                                 Left err     -> pack $ "\n" ++ "error = \n" ++ show err ++ "\n"
                                 Right (h,bs) -> pack $ present h bs
 
-showMap :: Map VarName DFSExpr -> String
-showMap = foldrWithKey (\k v -> (++) $ show k ++ " = " ++ show v ++ "\n" ) ""
-
 present :: Header -> Body -> String
 present _ []     = ""
 present h (Cond c b:bs) = case eval h c of
-                                VBool True -> outputInfoIf h c ++ present h b ++ outputEndIf h c
-                                _          -> outputFalseIf h c
+                                VBool True -> outputComment h c "if:" ++ present h b ++ outputComment h c "endif:"
+                                _          -> outputComment h c "if-hiding; false == "
                             ++ present h bs
-present h (Ref r:bs)    = outputInfoRef h r ++ show (eval h r) ++ present h bs
+present h (Ref r:bs)    = outputComment h r "ref:" ++ show (eval h r) ++ present h bs
 present h (Verb v:bs)   = v ++ present h bs
 
--- TODO: this clearly needs cleaning up, merging, and putting in a correct place.
-outputInfoRef :: Header -> DFSExpr -> String
-outputInfoRef h e        = case lookup "commentstart" h of
-                             Nothing -> ""
-                             Just (Prim (VString start)) ->
-                               case lookup "commentstop" h of
-                               Nothing -> ""
-                               Just (Prim (VString stop)) -> unwords [start,"ref:",show e,stop]
-                               _ -> ""
+outputComment :: Header -> DFSExpr -> String -> String
+outputComment h e note   = case lookup "commentstart" h of
+                           Nothing -> ""
+                           Just (Prim (VString start)) ->
+                             case lookup "commentstop" h of
+                             Nothing -> concat               ("\n":[start,note,show e]++["\n"])
+                             Just (Prim (VString stop)) -> unwords ([start,note,show e]++[stop])
                              _ -> ""
-outputFalseIf :: Header -> DFSExpr -> String
-outputFalseIf h e       = case lookup "commentstart" h of
-                            Nothing -> ""
-                            Just (Prim (VString start)) ->
-                              case lookup "commentstop" h of
-                              Nothing -> concat ["\n",start," hiding block because: \n",start,"false == ",show e,"\n"]
-                              Just (Prim (VString stop)) -> unwords [start,"evals to false: ",show e,stop]
-                              _ -> ""
-                            _ -> ""
-outputInfoIf :: Header -> DFSExpr -> String
-outputInfoIf h e        = case lookup "commentstart" h of
-                            Nothing -> ""
-                            Just (Prim (VString start)) ->
-                              case lookup "commentstop" h of
-                              Nothing -> concat ["\n",start," if: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> unwords [start,"if:",show e,stop]
-                              _ -> ""
-                            _ -> ""
-outputEndIf :: Header -> DFSExpr -> String
-outputEndIf h e        = case lookup "commentstart" h of
-                            Nothing -> ""
-                            Just (Prim (VString start)) ->
-                              case lookup "commentstop" h of
-                              Nothing -> concat ["\n",start," endif: ",show e,"\n"]
-                              Just (Prim (VString stop)) -> unwords [start,"endif:",show e,stop]
-                              _ -> ""
-                            _ -> ""
+                           _ -> ""
