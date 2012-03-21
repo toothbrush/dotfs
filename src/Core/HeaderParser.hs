@@ -25,8 +25,7 @@ headerP = do { _ <- symbol lex "<<dotfs"
              ; whiteSpace lex
              ; _ <- many assignmentP
              ; _ <- string ">>"
-             ; state <- getState
-             ; return state
+             ; getState -- returns the state
              }
 
 -- parse an assignment
