@@ -15,6 +15,10 @@ import Text.Parsec hiding (parseTest)
 import Text.Parsec.Token as P
 import Data.Map
 
+headerRecogniseP = do { _ <- symbol lex "<<dotfs"
+                      ; return ()
+                      }
+
 -- parse the header, no whitespace around it is eaten
 headerP :: VarParser DFSState
 headerP = do { _ <- symbol lex "<<dotfs"
@@ -31,7 +35,7 @@ assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try shellCommandP
            <|> assignState
-            ) <* ( semi lex <* whiteSpace lex)
+            ) <* ( semi lex <* whiteSpace lex) <?> "assignment"
 
 
 -- we must prevent comment tags from being ignored by the lexer,

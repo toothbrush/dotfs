@@ -17,8 +17,11 @@ import Text.Parsec
 import Text.Parsec.Token as P
 
 
-bodyP :: VarParser Body
-bodyP = id <$ headerP *> blocksP <* eof <?> "body with annotations"
+bodyP :: VarParser (Header,Body)
+bodyP = do { b <- id <$ headerP *> blocksP <* eof <?> "body with annotations"
+           ; h <- getState
+           ; return (h,b)
+           }
 
 blocksP :: VarParser Body
 blocksP = many blockP

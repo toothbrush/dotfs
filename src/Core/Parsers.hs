@@ -5,7 +5,7 @@ module Core.Parsers where
 import Prelude hiding (lex, lookup, readFile, putStrLn)
 
 import Core.Datatypes
-import Core.HeaderParser (headerP)
+import Core.HeaderParser (headerP, headerRecogniseP)
 import Core.HelperParsers
 import Core.Lexers
 import Core.ExpressionEvaluator
@@ -33,11 +33,11 @@ testfile name = do { fc <- readFile name
 process :: FilePath -> ByteString -> ByteString
 process file contents =
                        let inp = unpack contents in
-                         case runParser headerP empty file inp of
+                         case runParser headerRecogniseP empty file inp of
                              Left err  -> contents
-                             Right h   -> case runParser bodyP empty file inp of
-                                Left err -> pack $ "state = \n" ++ showMap h ++ "\n" ++ "error = \n" ++ show err ++ "\n"
-                                Right bs -> pack $ present h bs
+                             Right _   -> case runParser bodyP empty file inp of
+                                Left err     -> pack $ "\n" ++ "error = \n" ++ show err ++ "\n"
+                                Right (h,bs) -> pack $ present h bs
 
 showMap :: Map VarName DFSExpr -> String
 showMap = foldrWithKey (\k v -> (++) $ show k ++ " = " ++ show v ++ "\n" ) ""
