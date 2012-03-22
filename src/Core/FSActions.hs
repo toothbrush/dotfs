@@ -15,6 +15,8 @@ import System.Directory
 import System.Fuse
 import Control.Monad
 
+import Data.Bits
+
 import Data.List (intersperse, intercalate)
 
 import Prelude hiding (readFile, length)
@@ -151,8 +153,9 @@ dotfsLookUp (C confdir) path = do
     confVersion <- statIfExists confdir path
     case confVersion of
         Just stats ->  do let oldFileStat = dotfsFileStat stats
-                              -- TODO set owner to current user
-                              newFileStat = oldFileStat {statFileMode = 0o400} -- read only for the owner
+                              -- Prevent other users accessing the files,
+                              -- and prevent writing permission.
+                              newFileStat = oldFileStat {statFileMode = (0o500) .&. (statFileMode oldFileStat)}
                               stats'      = stats {dotfsFileStat = newFileStat}
                           return $ Just stats'
         Nothing -> return Nothing
