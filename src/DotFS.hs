@@ -14,15 +14,9 @@ import Control.Monad
 {-
  - TODO: we can fill in actualPath now. do we want to though?
  -}
-{-
-OPEN QUESTIONS:
-
-How should I present SymLinks?
--}
 
 {- TODO
 * There's currently no real error checking whatsoever.
-* Add dotfsWrite
 * Thread in logging
 * Can I delete "dotfsVirtualPath"?
 * need to add unit tests
@@ -44,4 +38,4 @@ main = do
   (mp, dirs) <- validateDirs dirList
   hPutStrLn stderr ("Mountpoint = \t "++mp)
   hPutStrLn stderr ("     Conf  = \t "++show dirs)
-  withArgs (mp:fuseargs) $ fuseMain (dotFSOps dirs) defaultExceptionHandler
+  withArgs (mp:fuseargs) $ fuseMain (dotFSOps mp dirs) defaultExceptionHandler

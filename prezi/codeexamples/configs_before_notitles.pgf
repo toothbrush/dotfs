@@ -31,7 +31,7 @@
 \newcommand\rtag{\textcolor{op}{>\hbox{}>}}
 \newcommand\sem{\textcolor{ln}{;}}
 
-\tikzstyle{every node}=[font=\normalfont]
+\tikzstyle{every node}=[font=\normalfont,anchor=west]
 \begin{tikzpicture}[
 box/.style={
 	%bottom color=boxbot,
@@ -47,19 +47,31 @@ normwidth/.style={
 ]
 
 \node[box] {\resetlnr
-\lnr\ltag \op{dotfs}\\
-\lnr~~\kw{mybase} \op= \op{if(} \val{hostname}\op{==}\str{"work"} \op{)\{}\num{8}\op{\}\{}\num{10}\op{\}}\sem\\
-\lnr~~\kw{syscolors} \op{:=} \str{"/usr/bin/testcolors --count"}\sem\\
-\lnr~~\kw{theme} \op= \op{if(} \kw{syscolors}\op{>=}\num{16} \op{)\{}\str{"pleiades"}\op{\}\{}\str{"jura"}\op{\}}\sem\\
-\lnr~~\kw{version} \op{:=} \str{"abacus -\hbox{}-version"}\sem\\
-\lnr\rtag\\
-\lnr mode=automatic\\
-\lnr base=\ltag\op{var} \kw{mybase}\rtag\\
-\lnr colortheme=\ltag\op{var} \kw{theme}\rtag\\
-\lnr \ltag\op{if} \kw{version}\op{>=}\num{8} \rtag\\
-\lnr~~donotcrash=true\\
-\lnr \ltag\op{fi}\rtag
+\textcolor{number}{\~\relax/configs/abacusrc: }\\
+\lnr mode=manual\\
+\lnr base=10\\
+\lnr colortheme="pleiades"\\
+
 };
+
+\node[box] at (0,-3) {\resetlnr
+\textcolor{number}{\~\relax/configs/abacusrc:}\\
+\lnr mode=manual\\
+\lnr base=8\\
+\lnr colortheme="jura"\\
+
+};
+
+
+\node[box] at (0,-6) {\resetlnr
+\textcolor{number}{\~\relax/configs/abacusrc:}\\
+\lnr mode=manual\\
+\lnr base=10\\
+\lnr colortheme="jura"\\
+
+};
+
+
 
 %\node[box,normwidth] at (2,4) {\resetlnr
 %\num{.abacusrc:}\\

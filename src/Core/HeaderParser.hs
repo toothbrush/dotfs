@@ -8,19 +8,24 @@ import Core.Datatypes
 import Core.Lexers
 import Core.ExpressionParsers
 import Core.ExpressionEvaluator
+import Core.HelperParsers (eatEverything)
 
 import Control.Applicative ((<*))
 import Text.Parsec hiding (parseTest)
 import Text.Parsec.Token as P
 import Data.Map
 
+headerRecogniseP = do { _ <- symbol lex "<<dotfs"
+                      ; return ()
+                      }
+
 -- parse the header, no whitespace around it is eaten
-headerP:: VarParser ()
+headerP :: VarParser DFSState
 headerP = do { _ <- symbol lex "<<dotfs"
              ; whiteSpace lex
              ; _ <- many assignmentP
              ; _ <- string ">>"
-             ; return ()
+             ; getState -- returns the state
              }
 
 -- parse an assignment
@@ -29,7 +34,7 @@ assignmentP = (try tagstyleP
            <|> try commentstyleP
            <|> try shellCommandP
            <|> assignState
-            ) <* ( semi lex <* whiteSpace lex)
+            ) <* ( semi lex <* whiteSpace lex) <?> "assignment"
 
 
 -- we must prevent comment tags from being ignored by the lexer,

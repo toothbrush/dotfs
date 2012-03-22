@@ -40,5 +40,5 @@ parseTest p st inp = case runParser (includeState p) st "" inp of
                                           ; print err
                                           }
                           (Right (x,state))  -> case x of
-                                                 Vanilla v ->     putStrLn "Vanilla"
+                                                 Vanilla       -> putStrLn "Vanilla"
                                                  Annotated h b -> putStrLn "Annotated"
