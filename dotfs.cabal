@@ -38,19 +38,18 @@ Executable            dotfs
   default-language:   Haskell98
   hs-source-dirs:     src, .
   ghc-options:        -threaded
-  if !os(linux)
-    main-is:            Unsupported.hs
-    build-depends:      base
-  if os(linux)
-    main-is:            DotFS.hs
-    build-depends:      bytestring >=0.9,
-                        base,
-                        haskell98,
-                        HFuse >= 0.2.1,
-                        directory>=1,
-                        unix >= 2.3,
-                        filepath >=1.1,
-                        parsec,
-                        containers,
-                        transformers,
-                        process
+--  if !os(linux)
+--    main-is:            Unsupported.hs
+--    build-depends:      base
+--  if os(linux)
+  main-is:            DotFS.hs
+  build-depends:      bytestring >=0.9,
+                      base,
+                      HFuse >= 0.2.1,
+                      directory>=1,
+                      unix >= 2.3,
+                      filepath >=1.1,
+                      parsec,
+                      containers,
+                      transformers,
+                      process
