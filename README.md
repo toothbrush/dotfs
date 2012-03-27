@@ -10,6 +10,10 @@ The use case is a user wanting automatic configuration adjustment in larger
 config files with shared sections. See the wiki for a quick guide, a users' guide,
 a specification of the grammar, and some examples.
 
+Note that if a file doesn't contain DotFS markup, it is passed through "vanilla" -- even binaries. This means that
+you don't have to convert all your config files before starting with DotFS, but that you can annotate those which 
+currently pose an inconvenience, and leave all the others as they are.
+
 
 Requirements
 ------------
@@ -20,14 +24,14 @@ Requirements
 
 Installation
 ------------
-First install some dependencies:
+First install some dependencies (example is for Debian-like systems):
 
 
 ```
 sudo apt-get install libfuse-dev fuse-utils
 ```
 
-Install DotFS, or run from the local directory using `make`.
+Install DotFS, or run from the local directory using `make` and then `./dotfs`.
 
 ```
 cabal configure
