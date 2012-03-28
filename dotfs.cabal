@@ -3,7 +3,6 @@ version:             0.0.2
 synopsis:            Filesystem to manage and parse dotfiles
 category:            System
 license:             BSD3
---license-file:        LICENSE
 author:              Sjoerd Timmer and Paul van der Walt
 maintainer:          dotfs@denknerd.org
 homepage:            http://github.com/toothbrush/dotfs
@@ -38,10 +37,6 @@ Executable            dotfs
   default-language:   Haskell98
   hs-source-dirs:     src, .
   ghc-options:        -threaded
---  if !os(linux)
---    main-is:            Unsupported.hs
---    build-depends:      base
---  if os(linux)
   main-is:            DotFS.hs
   build-depends:      bytestring >=0.9,
                       base,
