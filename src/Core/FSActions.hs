@@ -65,7 +65,7 @@ getStats entrytype uri = do
       fd <- readFile uri
       let parsed = process uri fd
       return $ fromIntegral (length parsed)
-    SymbolicLink -> return 42
+    SymbolicLink -> return 42 -- arbitrary size for symlinks
     _ -> return 0
   return DotFS {
       dotfsEntryName   = takeFileName uri
@@ -155,7 +155,7 @@ dotfsLookUp (C confdir) path = do
         Just stats ->  do let oldFileStat = dotfsFileStat stats
                               -- Prevent other users accessing the files,
                               -- and prevent writing permission.
-                              newFileStat = oldFileStat {statFileMode = (0o500) .&. (statFileMode oldFileStat)}
+                              newFileStat = oldFileStat {statFileMode = 0o500 .&. statFileMode oldFileStat}
                               stats'      = stats {dotfsFileStat = newFileStat}
                           return $ Just stats'
         Nothing -> return Nothing
