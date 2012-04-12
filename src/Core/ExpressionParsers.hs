@@ -32,8 +32,8 @@ table = [
   where
     op s f       = Infix   (do { reservedOp lex s; return f } <?> "operator")
     pre s f      = Prefix  (do { reservedOp lex s; return f })
-    post s f     = Postfix (do { reservedOp lex s; return f })
 
+factor :: ParsecT String DFSState Identity DFSExpr
 factor =  parens lex exprP
       <|> ((Prim . VInt) <$> integer lex)
       <|> ((Prim . VBool) <$> boolTerm)
@@ -42,13 +42,15 @@ factor =  parens lex exprP
       <|> ifTerm
       <?> "simple expression or variable"
 
-boolTerm =  do { symbol lex "true"
+boolTerm :: forall u. ParsecT String u Identity Bool
+boolTerm =  do { _ <- symbol lex "true"
                ; return True
                }
-        <|> do { symbol lex "false"
+        <|> do { _ <- symbol lex "false"
                ; return False
                }
 
+ifTerm :: ParsecT String DFSState Identity DFSExpr
 ifTerm = do { reservedOp lex "if"
             ; condition <- parens lex exprP
             ; _ <- symbol lex "{"

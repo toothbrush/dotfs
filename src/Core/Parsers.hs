@@ -17,8 +17,8 @@ import Text.Parsec.Token
 
 import Data.Map
 
-import Data.ByteString.Char8 (unpack, pack, ByteString)
-import Data.ByteString (readFile, putStrLn)
+import Data.ByteString.Char8 (unpack, pack, ByteString, putStrLn)
+import Data.ByteString (readFile)
 
 -- | Test-process a given file, and show the result.
 -- Especially useful for testing in combination with GHCi.

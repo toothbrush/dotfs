@@ -3,7 +3,7 @@ module Core.Datatypes where
 
 import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim
-import Data.Map (lookup, fromList, Map, foldrWithKey)
+import Data.Map (lookup, fromList, Map)
 import Data.Char (toLower)
 
 import Prelude hiding (lookup)
