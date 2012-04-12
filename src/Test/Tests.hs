@@ -51,4 +51,4 @@ arbitraryStr = sized $ \n ->
 
 -- | we don't want newlines in our strings...
 arbitraryChar :: Gen Char
-arbitraryChar = chr `fmap` oneof [choose (0,9), choose (11,255)]
+arbitraryChar = chr `fmap` oneof [choose (65,90), choose (97,122)]
