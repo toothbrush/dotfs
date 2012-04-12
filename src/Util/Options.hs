@@ -35,7 +35,7 @@ printHelp :: Options -> IO Options
 printHelp _ = do
   prg <- getProgName
   hPutStrLn stderr "Usage:"
-  hPutStrLn stderr $ "\t"++prg++" [options] mountpoint confdir"
+  hPutStrLn stderr $ "\t"++prg++" [options] confdir mountpoint"
   hPutStrLn stderr (usageInfo prg options)
   exitSuccess
 

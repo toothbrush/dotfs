@@ -15,7 +15,7 @@ validateDirs dirs =
                       existingDirs <- filterM doesDirectoryExist dirs
                       canonicalDirs <- mapM canonicalizePath existingDirs
                       if length canonicalDirs == 2 then do
-                          let (mountpoint : confdir : []) = canonicalDirs
+                          let (confdir : mountpoint : []) = canonicalDirs
                           return (mountpoint, C confdir)
                          else do
                            hPutStrLn stderr "Invalid director(y|ies)"
