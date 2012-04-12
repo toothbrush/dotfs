@@ -1,0 +1,34 @@
+\renewcommand\encodingdefault{T1}
+\renewcommand\familydefault{fvm}
+\usetikzlibrary{positioning}
+
+\begin{tikzpicture}[
+every node/.style={font=\sf}
+]
+\begin{scope}[yshift=1.5mm,xshift=-2mm,scale=1.1]
+\node (dotfiles) at (1.07,-2.88) {\includegraphics[width=2mm]{/home/sjoerd/dotfs/prezi/fileview/folder.png}};
+\node[rotate=90,scale=0.2,color=black!80] (real) at (1.05,-2.87) {real};
+\node (dotfs) at (1,-3) {\includegraphics[width=8mm]{/home/sjoerd/dotfs/prezi/fileview/Magnifier.png}};
+\node[scale=0.25,rotate=50,color=black!80] at (0.75,-3.21) {dotfs};
+\end{scope}
+\node (docs) at (0,0) {\includegraphics[width=8mm]{/home/sjoerd/dotfs/prezi/fileview/folder.png}};
+\node (pics) at (1,-1) {\includegraphics[width=8mm]{/home/sjoerd/dotfs/prezi/fileview/folder.png}};
+\node (work) at (1,-2) {\includegraphics[width=8mm]{/home/sjoerd/dotfs/prezi/fileview/folder.png}};
+
+
+\node[anchor=west,scale=1.3] at (0.3,0) {My Document};
+\node[anchor=west,scale=1.3] at (1.3,-1) {my pictures};
+\node[anchor=west,scale=1.3] at (1.3,-2) {work stuff};
+\node[anchor=west,scale=1.3] at (1.3,-3) {virtual};
+
+\draw[gray,dotted,ultra thick] (docs) |- (0.6,-1);
+\draw[gray,dotted,ultra thick] (docs) |- (0.6,-2);
+\draw[gray,dotted,ultra thick] (docs) |- (0.6,-3);
+
+\node[fill=white,draw,very thick,scale=0.4] at (0,-1) {\textbf{+}}; 
+\node[fill=white,draw,very thick,scale=0.4] at (0,-2) {\textbf{+}}; 
+\node[fill=white,draw,very thick,scale=0.4] at (0,-3) {\textbf{+}}; 
+
+
+
+\end{tikzpicture}
