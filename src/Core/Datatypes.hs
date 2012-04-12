@@ -29,7 +29,7 @@ data Value = VInt Integer
 instance Show Value where
   show (VInt    i) = show i
   show (VBool   b) = map toLower $ show b
-  show (VString s) = "\"" ++ s ++ "\""
+  show (VString s) = s
 
 
 -- | a config file is either just a normal file, to be passed
