@@ -24,7 +24,7 @@ headerP :: VarParser DFSState
 headerP = do { _ <- symbol lex "<<dotfs"
              ; whiteSpace lex
              ; _ <- many assignmentP
-             ; _ <- string ">>"
+             ; _ <- string ">>\n"
              ; getState -- returns the state
              }
 
