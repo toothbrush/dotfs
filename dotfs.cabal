@@ -31,7 +31,7 @@ Test-Suite test-dotfs
   ghc-options:      -Wall -rtsopts
   hs-source-dirs:   src, .
   default-language: Haskell98
-  main-is:          Test/Unit.hs
+  main-is:          Test/Main.hs
 
 Executable            dotfs
   default-language:   Haskell98
