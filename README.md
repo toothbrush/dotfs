@@ -40,16 +40,4 @@ cabal install
 
 Usage
 -----
-There are currently very few options:
-
-```
-dotfs [OPTIONS] MOUNTPOINT CONFDIR
-```
-
-where MOUNTPOINT and CONFDIR are paths.
-
-OPTIONS:
-
-*  -h
-*  -V    print version
-
+See the [wiki entry on usage](https://github.com/toothbrush/dotfs/wiki/DotFS-Usage).
