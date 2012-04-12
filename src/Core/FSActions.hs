@@ -128,13 +128,6 @@ dotfsReadSymbolicLink (C confdir) mp path = do
                                               return $ Right answer
 
 {- possible FUSE operations:
- -- | Implements Unix98 @pread(2)@. It differs from
- --   'System.Posix.Files.fdRead' by the explicit 'FileOffset' argument.
- --   The @fuse.h@ documentation stipulates that this \"should return
- --   exactly the number of bytes requested except on EOF or error,
- --   otherwise the rest of the data will be substituted with zeroes.\"
- fuseRead :: FilePath -> fh -> ByteCount -> FileOffset
-          -> IO (Either Errno B.ByteString),
  --
  -- | Check file access permissions; this will be called for the
  --   access() system call.  If the @default_permissions@ mount option
@@ -169,8 +162,6 @@ dotfsGetFileStat dp (_:dir) = do
     Just file -> return $ Right $ dotfsFileStat file
     Nothing   -> return $ Left eNOENT
 
-
-
 dotfsOpen :: Conf -> FilePath -> OpenMode -> OpenFileFlags -> IO (Either Errno String)
 dotfsOpen dirs (_:path) ReadOnly flags = do
   file <- dotfsLookUp dirs path
@@ -189,7 +180,6 @@ dotfsOpenDirectory :: Conf -> FilePath -> IO Errno
 dotfsOpenDirectory (C confdir) (_:path) = do
   extantDirs <- confdir `dirExists` path
   return $ if extantDirs then eOK else eNOENT
-
 
 dotfsReadDirectory :: Conf -> FilePath -> IO (Either Errno [(FilePath, FileStat)])
 dotfsReadDirectory dirs@(C confdir) (_:dir) = do
@@ -210,4 +200,3 @@ dotfsRead dirsToUnion (_:path) fd byteCount offset = do
   let a = drop (fromIntegral offset) fd
       b = take (fromIntegral byteCount) a
   return $ Right $ pack b
-

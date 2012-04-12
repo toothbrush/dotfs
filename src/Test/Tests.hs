@@ -15,6 +15,9 @@ import {-# SOURCE #-} Test.Unit()
 prop_parseExpr :: DFSExpr -> Bool
 prop_parseExpr xs = xs == testExprP (show xs)
 
+--prop_parseHeader :: Header -> Bool
+--prop_parseHeader xs = xs == testHeaderP (show xs)
+
 testExprP :: String -> DFSExpr
 testExprP inp = case runParser exprP empty "expr" inp of
               Left err -> Prim . VString $ "error = \n" ++ show (errorPos err) ++ "\n"
