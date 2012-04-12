@@ -17,32 +17,6 @@ testExprP inp = case runParser exprP empty "expr" inp of
               Left err -> Prim . VString $ "error = \n" ++ show (errorPos err) ++ "\n"
               Right s  -> s
 
-
-instance Arbitrary DFSExpr where
-    arbitrary  =  sized expr
-        where
-          expr n | n <= 0     =  atom
-                 | otherwise  =  oneof [ atom
-                                       , liftM2 UniOp unioperator subform
-                                       , liftM3 BiOp bioperator subform subform'
-                                       ]
-                 where
-                   atom = oneof [ liftM Var (elements ["P", "Q", "R", "S"])
-                                , liftM Prim arbitrary
-                                ]
-                   subform  = expr (n `div` 2)
-                   subform' = expr (n `div` 4)
-                   unioperator = elements [Not]
-                   bioperator  = elements [Add, Sub, Mul, Div, And, Or, Eq, LTOp, GTOp, GEQ, LEQ, NEQ]
-
-
-instance Arbitrary Value where
-    arbitrary = oneof [ liftM VBool   arbitrary
-                      , liftM VInt    arbitrary
-                      , liftM VString arbitraryStr
-                      ]
-
-
 -- | unfortunately we need to override the "instance Arbitrary [a]" for strings
 arbitraryStr :: Gen String
 arbitraryStr = sized $ \n ->
