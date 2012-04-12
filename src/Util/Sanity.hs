@@ -18,7 +18,7 @@ validateDirs dirs =
                           let (mountpoint : confdir : []) = canonicalDirs
                           return (mountpoint, C confdir)
                          else do
-                           hPutStrLn stderr "Wrong number of arguments"
+                           hPutStrLn stderr "Invalid director(y|ies)"
                            _ <- printHelp defaultOptions
                            exitWith $ ExitFailure 1
 

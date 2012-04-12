@@ -3,6 +3,7 @@ module Core.FSActions where
 import Core.Datatypes
 import Core.FuseTypes
 import Util.Debug
+import Util.Options
 import Core.Constants
 import Core.Parsers
 
@@ -103,8 +104,8 @@ statIfExists dir file = do
                                                        return $ Just stats
                                             else return Nothing
 
-dotFSOps :: Mountpoint -> Conf -> FuseOperations String
-dotFSOps mp dir =
+dotFSOps :: Options -> Mountpoint -> Conf -> FuseOperations String
+dotFSOps os mp dir =
   defaultFuseOps {
                    fuseGetFileStat        = dotfsGetFileStat dir
                  , fuseGetFileSystemStats = dotfsGetFileSystemStats dir

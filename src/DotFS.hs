@@ -4,6 +4,8 @@ module Main where
 import Util.Options
 import Util.Sanity
 import Core.FSActions
+import Core.Datatypes
+import Data.List
 
 import System.Console.GetOpt
 import System.Environment
@@ -38,4 +40,49 @@ main = do
   (mp, dirs) <- validateDirs dirList
   hPutStrLn stderr ("Mountpoint = \t "++mp)
   hPutStrLn stderr ("     Conf  = \t "++show dirs)
-  withArgs (mp:fuseargs) $ fuseMain (dotFSOps mp dirs) defaultExceptionHandler
+  case script opts of
+    True  -> hPutStrLn stdout (printScript mp dirs)
+    False -> return ()
+  withArgs (mp:fuseargs) $ fuseMain (dotFSOps opts mp dirs) defaultExceptionHandler
+
+
+printScript :: FilePath -> Conf -> String
+printScript mountpoint (C confdir) = concat (intersperse "\n"
+    [ "#!/bin/bash"
+    , "#"
+    , "# The idea here is to make symlinks to all the files in "
+    , "# the mounted conf directory, inside the user's home (~)"
+    , "#"
+    , "# Should only need to be run once."
+    , "# Will not overwrite files or directories, but will update"
+    , "# symlinks, if found."
+    , "#"
+    , "# (c) Paul van der Walt, March 2012"
+    , ""
+    , "home=$HOME"
+    , "confdir=\"" ++ confdir ++ "\""
+    , ""
+    , "mountpoint=\"" ++ mountpoint ++ "\""
+    , ""
+    , "for i in $(ls -a $confdir) ;"
+    , "do"
+    , "  # skip the breadcrumbs"
+    , "  if [ \"$i\" = \".\" ] || [ \"$i\" = \"..\" ] ; "
+    , "  then "
+    , "    continue"
+    , "  fi"
+    , "  # here we should make symlinks, only if the source"
+    , "  # doesn't yet exist"
+    , "  newsource=$home/$(basename $i)"
+    , "  # note that preserving the tree structure here"
+    , "  # happens automatically, since `ls` only goes 1 deep."
+    , "  target=$mountpoint/$i"
+    , "  if [ -L $newsource ] ; # -L <=> exists and is symlink"
+    , "  then"
+    , "    # rm old link"
+    , "    echo \"Removing old link \\\"$newsource\\\"\""
+    , "    rm $newsource"
+    , "  fi"
+    , "  echo ln -s -v $target $newsource"
+    , "done"
+    ])
