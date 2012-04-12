@@ -2,7 +2,7 @@
 module Test.Unit where
 
 import Test.Utility -- our TH functions
-import Test.Tests -- our test cases
+import Test.Tests   -- our test cases
 import Control.Monad
 import Test.QuickCheck
 import Core.Datatypes
