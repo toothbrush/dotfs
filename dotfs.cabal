@@ -1,8 +1,14 @@
 name:                dotfs
 version:             0.0.2
 synopsis:            Filesystem to manage and parse dotfiles
+description:         A system which, when pointed to a folder full of specially
+                     annotated config files, will present these files tailored to
+                     your current environment. Useful for making, for example, an if-block
+                     in your mutt-config depending on your current location, which you
+                     can retrieve via some shell command.
 category:            System
 license:             BSD3
+license-file:        LICENSE
 author:              Sjoerd Timmer and Paul van der Walt
 maintainer:          dotfs@denknerd.org
 homepage:            http://github.com/toothbrush/dotfs
@@ -49,3 +55,7 @@ Executable            dotfs
                       containers,
                       transformers,
                       process
+
+source-repository head
+    type: git
+    location: https://toothbrush@github.com/toothbrush/dotfs.git
