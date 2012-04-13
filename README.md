@@ -1,7 +1,8 @@
 DOTFS
 =====
 
-DotFS is first and foremost a work in progress. The idea is that you
+DotFS is first and foremost a work in progress. It is, however, usable, and the authors use it on
+their personal machines. The idea is that you
 point DotFS to a folder containing your dotfiles containing special
 DotFS annotations, which will then be made available as a virtual filesystem at a
 user-specified mountpoint. The files will be scanned for special keywords and
