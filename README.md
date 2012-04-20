@@ -19,7 +19,7 @@ currently pose an inconvenience, and leave all the others as they are.
 Requirements
 ------------
 * POSIX system
-* [FUSE](http://fuse.sourceforge.net/)
+* [FUSE](http://fuse.sourceforge.net/) (or OSXFUSE)
 * [GHC](http://hackage.haskell.org/platform/) (Haskell platform recommended)
 * Tested on Linux, hfuse needs to be un-broken on OS X
 
@@ -27,6 +27,7 @@ Installation
 ------------
 First install some dependencies (example is for Debian-like systems):
 
+NOTE to OS X users: the HFuse library, on which we depend, doesn't build using the latest OSXFUSE library. Please use the [patched version](https://github.com/toothbrush/hfuse/tree/osxfuse-update) fork for now, until the pull request is hopefully accepted.
 
 ```
 sudo apt-get install libfuse-dev fuse-utils
