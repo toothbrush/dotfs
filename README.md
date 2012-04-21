@@ -44,4 +44,4 @@ Usage
 -----
 See the [wiki entry on usage](https://github.com/toothbrush/dotfs/wiki/DotFS-Usage). Soon a short presentation will
 also be put online which will hopefully serve as both an elevator pitch and a short introduction to the features that
-are available.
+are available. See [here](http://prezi.com/-acujvowpciq/dotfs/?auth_key=b5c3c371bc5e251ab6e1b3a1a705c4443bd434d9).
