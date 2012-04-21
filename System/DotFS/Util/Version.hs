@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Util.Version where
 
 version :: String

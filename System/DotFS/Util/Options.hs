@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Util.Options where
 
 import System.DotFS.Util.Version

@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Core.HelperParsers where
 
 import System.DotFS.Core.Datatypes

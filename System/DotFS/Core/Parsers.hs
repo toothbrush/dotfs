@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Core.Parsers where
 
 import Prelude hiding (lex, lookup, readFile, putStrLn)

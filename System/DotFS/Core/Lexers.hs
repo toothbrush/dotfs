@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE Haskell98 #-}
 {-# LANGUAGE RankNTypes #-}
 module System.DotFS.Core.Lexers where
 

@@ -1,4 +1,3 @@
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Util.Sanity where
 
 import System.DotFS.Core.Datatypes

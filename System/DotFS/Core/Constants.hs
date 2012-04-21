@@ -1,7 +1,6 @@
 {-
  - Everything here is evil by definition.
  -}
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Core.Constants where
 
 import System.DotFS.Core.Datatypes

@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Core.HeaderParser where
 
 import Prelude hiding (lex)

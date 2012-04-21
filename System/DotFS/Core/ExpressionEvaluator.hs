@@ -1,5 +1,4 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE Haskell98 #-}
 module System.DotFS.Core.ExpressionEvaluator where
 
 import Prelude hiding (lookup)
