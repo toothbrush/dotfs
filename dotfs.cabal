@@ -1,5 +1,5 @@
 name:                dotfs
-version:             0.0.2
+version:             0.1.1
 synopsis:            Filesystem to manage and parse dotfiles
 description:         A system which, when pointed to a folder full of specially
                      annotated config files, will present these files tailored to
@@ -10,7 +10,7 @@ category:            System
 license:             BSD3
 license-file:        LICENSE
 author:              Sjoerd Timmer and Paul van der Walt
-maintainer:          dotfs@denknerd.org
+maintainer:          Paul van der Walt <cabal@denknerd.org>
 homepage:            http://github.com/toothbrush/dotfs
 build-depends:       base,
                      test-framework >= 0.4.1,
@@ -47,7 +47,7 @@ Executable            dotfs
   main-is:            DotFS.hs
   build-depends:      bytestring >=0.9,
                       base,
-                      HFuse >= 0.2.1,
+                      HFuse > 0.2.4,
                       directory>=1,
                       unix >= 2.3,
                       filepath >=1.1,
