@@ -46,7 +46,7 @@ Executable            dotfs
   -- TODO: make this compile cleanly with -Wall
   main-is:            DotFS.hs
   build-depends:      bytestring >=0.9,
-                      base,
+                      base >= 4 && < 5,
                       HFuse > 0.2.4,
                       directory>=1,
                       unix >= 2.3,
