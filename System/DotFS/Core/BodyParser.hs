@@ -1,14 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE Haskell98 #-}
-module Core.BodyParser where
+module System.DotFS.Core.BodyParser where
 
 import Prelude hiding (lex,lookup)
 
-import Core.Datatypes
-import Core.Lexers
-import Core.ExpressionParsers
-import Core.HelperParsers
-import Core.HeaderParser
+import System.DotFS.Core.Datatypes
+import System.DotFS.Core.Lexers
+import System.DotFS.Core.ExpressionParsers
+import System.DotFS.Core.HelperParsers
+import System.DotFS.Core.HeaderParser
 
 import Data.Map
 

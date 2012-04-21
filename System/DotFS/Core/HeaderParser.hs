@@ -1,14 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
 {-# LANGUAGE Haskell98 #-}
-module Core.HeaderParser where
+module System.DotFS.Core.HeaderParser where
 
 import Prelude hiding (lex)
 
-import Core.Datatypes
-import Core.Lexers
-import Core.ExpressionParsers
-import Core.ExpressionEvaluator
-import Core.HelperParsers (eatEverything)
+import System.DotFS.Core.Datatypes
+import System.DotFS.Core.Lexers
+import System.DotFS.Core.ExpressionParsers
+import System.DotFS.Core.ExpressionEvaluator
+import System.DotFS.Core.HelperParsers (eatEverything)
 
 import Control.Applicative ((<*))
 import Text.Parsec hiding (parseTest)

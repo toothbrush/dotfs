@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE Haskell98 #-}
 {-# LANGUAGE RankNTypes #-}
-module Core.Lexers where
+module System.DotFS.Core.Lexers where
 
 import Prelude hiding (lex)
 

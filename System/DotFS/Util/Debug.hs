@@ -1,5 +1,5 @@
 {-# LANGUAGE Haskell98 #-}
-module Util.Debug where
+module System.DotFS.Util.Debug where
 
 -- TODO: nicer logging, to a variable filename (State / Reader monad?)
 debug :: String -> IO ()

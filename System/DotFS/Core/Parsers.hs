@@ -1,15 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE Haskell98 #-}
-module Core.Parsers where
+module System.DotFS.Core.Parsers where
 
 import Prelude hiding (lex, lookup, readFile, putStrLn)
 
-import Core.Datatypes
-import Core.HeaderParser (headerP, headerRecogniseP)
-import Core.HelperParsers
-import Core.Lexers
-import Core.ExpressionEvaluator
-import Core.BodyParser
+import System.DotFS.Core.Datatypes
+import System.DotFS.Core.HeaderParser (headerP, headerRecogniseP)
+import System.DotFS.Core.HelperParsers
+import System.DotFS.Core.Lexers
+import System.DotFS.Core.ExpressionEvaluator
+import System.DotFS.Core.BodyParser
 
 import Control.Applicative ((<$>))
 import Text.Parsec hiding (parseTest)

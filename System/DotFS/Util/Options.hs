@@ -1,7 +1,7 @@
 {-# LANGUAGE Haskell98 #-}
-module Util.Options where
+module System.DotFS.Util.Options where
 
-import Util.Version
+import System.DotFS.Util.Version
 import System.Exit
 import System.Environment
 import System.Console.GetOpt

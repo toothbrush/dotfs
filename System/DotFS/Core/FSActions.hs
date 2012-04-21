@@ -1,11 +1,11 @@
-module Core.FSActions where
+module System.DotFS.Core.FSActions where
 
-import Core.Datatypes
-import Core.FuseTypes
-import Util.Debug
-import Util.Options
-import Core.Constants
-import Core.Parsers
+import System.DotFS.Core.Datatypes
+import System.DotFS.Core.FuseTypes
+import System.DotFS.Util.Debug
+import System.DotFS.Util.Options
+import System.DotFS.Core.Constants
+import System.DotFS.Core.Parsers
 
 import qualified Data.ByteString.Char8 as B
 import System.Posix.Types

@@ -1,7 +1,7 @@
 {-# LANGUAGE Haskell98 #-}
-module Core.HelperParsers where
+module System.DotFS.Core.HelperParsers where
 
-import Core.Datatypes
+import System.DotFS.Core.Datatypes
 
 import Control.Monad (join)
 import Text.Parsec

@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs, ExistentialQuantification, FlexibleInstances #-}
-module Core.Datatypes where
+module System.DotFS.Core.Datatypes where
 
 import Data.Maybe
 import Text.ParserCombinators.Parsec.Prim

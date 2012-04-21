@@ -2,9 +2,9 @@
  - Everything here is evil by definition.
  -}
 {-# LANGUAGE Haskell98 #-}
-module Core.Constants where
+module System.DotFS.Core.Constants where
 
-import Core.Datatypes
+import System.DotFS.Core.Datatypes
 
 import System.Fuse
 import System.Posix.Files

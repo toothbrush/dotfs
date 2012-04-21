@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Haskell98 #-}
-module Core.ExpressionEvaluator where
+module System.DotFS.Core.ExpressionEvaluator where
 
 import Prelude hiding (lookup)
 import System.IO
@@ -8,7 +8,7 @@ import Control.Applicative
 import System.Process
 import System.IO.Unsafe
 
-import Core.Datatypes
+import System.DotFS.Core.Datatypes
 import Data.Map
 
 eval :: DFSState -> DFSExpr -> Value

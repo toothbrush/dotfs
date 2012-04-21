@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports -fforce-recomp -fth #-}
-module Test.Unit where
+module System.DotFS.Test.Unit where
 
-import Test.Utility -- our TH functions
-import Test.Tests   -- our test cases
+import System.DotFS.Test.Utility -- our TH functions
+import System.DotFS.Test.Tests   -- our test cases
 import Control.Monad
 import Test.QuickCheck
-import Core.Datatypes
+import System.DotFS.Core.Datatypes
 import Test.QuickCheck.Test
 import System.Exit
 

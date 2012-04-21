@@ -1,4 +1,4 @@
-module Core.FuseTypes where
+module System.DotFS.Core.FuseTypes where
 
 import System.Fuse
 

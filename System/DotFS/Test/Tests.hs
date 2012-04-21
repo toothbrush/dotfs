@@ -1,16 +1,16 @@
-module Test.Tests where
+module System.DotFS.Test.Tests where
 
-import Core.ExpressionParsers
+import System.DotFS.Core.ExpressionParsers
 import Text.Parsec hiding (parseTest)
 import Control.Monad
-import Core.Datatypes
+import System.DotFS.Core.Datatypes
 import Test.QuickCheck.Gen
 import Data.Char
 import Data.Map
 
 -- import the instances of Arbitrary ... from Test.Unit
 -- this uses a trick to prevent circular dependencies
-import {-# SOURCE #-} Test.Unit()
+import {-# SOURCE #-} System.DotFS.Test.Unit()
 
 prop_parseExpr :: DFSExpr -> Bool
 prop_parseExpr xs = xs == testExprP (show xs)

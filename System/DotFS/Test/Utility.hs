@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Test.Utility where
+module System.DotFS.Test.Utility where
 
 import Language.Haskell.Syntax
 import Language.Haskell.TH
@@ -17,7 +17,7 @@ import System.Exit
   the list.  Requires that Tests.hs be valid Haskell98. -}
 tests :: [String]
 tests = unsafePerformIO $
-  do h <- openFile "src/Test/Tests.hs" ReadMode
+  do h <- openFile "System/DotFS/Test/Tests.hs" ReadMode
      s <- hGetContents h
      case parseModule s of
        (ParseOk (HsModule _ _ _ _ ds)) -> return (map declName (filter isProp ds))

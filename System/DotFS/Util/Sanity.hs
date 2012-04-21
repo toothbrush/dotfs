@@ -1,8 +1,8 @@
 {-# LANGUAGE Haskell98 #-}
-module Util.Sanity where
+module System.DotFS.Util.Sanity where
 
-import Core.Datatypes
-import Util.Options
+import System.DotFS.Core.Datatypes
+import System.DotFS.Util.Options
 
 import System.IO
 import System.Directory

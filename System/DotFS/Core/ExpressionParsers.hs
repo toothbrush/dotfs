@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, GADTs, ExistentialQuantification #-}
 {-# LANGUAGE Haskell98 #-}
-module Core.ExpressionParsers where
+module System.DotFS.Core.ExpressionParsers where
 
 import Prelude hiding (lex,lookup)
 import Control.Applicative ((<$>))
-import Core.Datatypes
-import Core.Lexers
+import System.DotFS.Core.Datatypes
+import System.DotFS.Core.Lexers
 import Data.Functor.Identity
 import Text.Parsec
 import Text.Parsec.Token as P

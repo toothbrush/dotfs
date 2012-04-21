@@ -1,12 +1,12 @@
 {-# LANGUAGE Haskell98 #-}
 module Main where
 
-import Util.Options
-import Util.Sanity
-import Core.FSActions
-import Core.Datatypes
-import Data.List
+import System.DotFS.Util.Options
+import System.DotFS.Util.Sanity
+import System.DotFS.Core.FSActions
+import System.DotFS.Core.Datatypes
 
+import Data.List
 import System.Console.GetOpt
 import System.Environment
 import System.IO
