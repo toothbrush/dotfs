@@ -1,3 +1,0 @@
-:m + Test.QuickCheck
-:set -isrc
-:l Test.Tests
