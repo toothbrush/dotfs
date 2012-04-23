@@ -33,12 +33,12 @@ table = [
     pre s f      = Prefix  (do { reservedOp lex s; return f })
 
 factor :: ParsecT String DFSState Identity DFSExpr
-factor =  try (parens lex exprP)
-      <|> (try $ (Prim . VInt) <$> integer lex)
-      <|> (try $ (Prim . VBool) <$> boolTerm)
-      <|> (try $ (Prim . VString) <$> stringLiteral lex)
-      <|> (try $ Var <$> identifier lex)
-      <|> (try ifTerm)
+factor =  (parens lex exprP)
+      <|> ((Prim . VInt) <$> integer lex)
+      <|> ((Prim . VBool) <$> boolTerm)
+      <|> ((Prim . VString) <$> stringLiteral lex)
+      <|> (Var <$> identifier lex)
+      <|> ifTerm
       <?> "simple expression or variable"
 
 boolTerm :: forall u. ParsecT String u Identity Bool

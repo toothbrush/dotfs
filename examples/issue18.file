@@ -1,4 +1,6 @@
 <<dotfs
 foo = "bar";
+falsefoo = "falsefoo";
 >>
 <<var foo>>
+<<var falsefoo>>
