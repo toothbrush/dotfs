@@ -34,6 +34,25 @@ Test-Suite test-dotfs
   default-language: Haskell98
   main-is:          System/DotFS/Test/Main.hs
 
+test-suite spec
+  default-language:
+      Haskell98
+  type:
+      exitcode-stdio-1.0
+  ghc-options:
+      -Wall -Werror
+  hs-source-dirs:
+      ., test
+  main-is:
+      Spec.hs
+  build-depends:
+      base
+    , hspec
+    , HUnit
+    , parsec
+    , transformers
+    , containers
+
 Library
   other-modules:      System.DotFS.Core.BodyParser,
                       System.DotFS.Core.ExpressionParsers,
