@@ -1,0 +1,4 @@
+<<dotfs
+foo = "bar";
+>>
+<<var foo>>
