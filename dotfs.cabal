@@ -37,7 +37,6 @@ Test-Suite test-dotfs
 Executable            dotfs
   default-language:   Haskell98
   ghc-options:        -threaded
-  -- TODO: make this compile cleanly with -Wall
   main-is:            System/DotFS/DotFS.hs
   build-depends:      bytestring >=0.9,
                       base >= 4 && < 5,
@@ -67,6 +66,25 @@ Executable            dotfs
                       System.DotFS.Util.Options,
                       System.DotFS.Util.Sanity,
                       System.DotFS.Util.Version
+test-suite spec
+  default-language:
+      Haskell98
+  type:
+      exitcode-stdio-1.0
+  ghc-options:
+      -Wall -Werror
+  hs-source-dirs:
+      ., test
+  main-is:
+      Spec.hs
+  build-depends:
+      base
+    , hspec
+    , HUnit
+    , parsec
+    , transformers
+    , containers
+
 
 source-repository head
     type: git

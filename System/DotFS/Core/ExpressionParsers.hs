@@ -42,10 +42,10 @@ factor =  try (parens lex exprP)
       <?> "simple expression or variable"
 
 boolTerm :: forall u. ParsecT String u Identity Bool
-boolTerm =  do { _ <- symbol lex "true"
+boolTerm =  do { _ <- reserved lex "true"
                ; return True
                }
-        <|> do { _ <- symbol lex "false"
+        <|> do { _ <- reserved lex "false"
                ; return False
                }
 

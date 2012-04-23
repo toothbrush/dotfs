@@ -1,3 +1,1 @@
-:m + Test.QuickCheck
-:set -isrc
-:l System.DotFS.Test.Tests
+:set -i. -itest
