@@ -149,7 +149,7 @@ dotfsLookUp (C confdir) path = do
         Just stats ->  do let oldFileStat = dotfsFileStat stats
                               -- Prevent other users accessing the files,
                               -- and prevent writing permission.
-                              newFileStat = oldFileStat {statFileMode = 0o500 .&. statFileMode oldFileStat}
+                              newFileStat = oldFileStat {statFileMode = 0o555 .&. statFileMode oldFileStat}
                               stats'      = stats {dotfsFileStat = newFileStat}
                           return $ Just stats'
         Nothing -> return Nothing
