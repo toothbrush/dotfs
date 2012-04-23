@@ -1,3 +1,3 @@
 :m + Test.QuickCheck
 :set -isrc
-:l Test.Tests
+:l System.DotFS.Test.Tests
