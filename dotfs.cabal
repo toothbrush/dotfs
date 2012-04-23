@@ -34,7 +34,21 @@ Test-Suite test-dotfs
   default-language: Haskell98
   main-is:          System/DotFS/Test/Main.hs
 
-Library
+Executable            dotfs
+  default-language:   Haskell98
+  ghc-options:        -threaded
+  -- TODO: make this compile cleanly with -Wall
+  main-is:            System/DotFS/DotFS.hs
+  build-depends:      bytestring >=0.9,
+                      base >= 4 && < 5,
+                      HFuse > 0.2.4,
+                      directory>=1,
+                      unix >= 2.3,
+                      filepath >=1.1,
+                      parsec,
+                      containers,
+                      transformers,
+                      process
   other-modules:      System.DotFS.Core.BodyParser,
                       System.DotFS.Core.ExpressionParsers,
                       System.DotFS.Core.Constants,
@@ -53,42 +67,6 @@ Library
                       System.DotFS.Util.Options,
                       System.DotFS.Util.Sanity,
                       System.DotFS.Util.Version
-
-  default-language:   Haskell98
-  build-depends:      bytestring >=0.9,
-                      base >= 4 && < 5,
-                      HFuse > 0.2.4,
-                      directory>=1,
-                      unix >= 2.3,
-                      filepath >=1.1,
-                      parsec,
-                      containers,
-                      transformers,
-                      process,
-                      HUnit >= 1.2 && < 2,
-                      QuickCheck >= 2.4,
-                      test-framework >= 0.4.1,
-                      test-framework-quickcheck2,
-                      test-framework-hunit,
-                      parsec >= 3,
-                      haskell-src,
-                      template-haskell
-
-Executable            dotfs
-  default-language:   Haskell98
-  ghc-options:        -threaded
-  -- TODO: make this compile cleanly with -Wall
-  main-is:            System/DotFS/DotFS.hs
-  build-depends:      bytestring >=0.9,
-                      base >= 4 && < 5,
-                      HFuse > 0.2.4,
-                      directory>=1,
-                      unix >= 2.3,
-                      filepath >=1.1,
-                      parsec,
-                      containers,
-                      transformers,
-                      process
 
 source-repository head
     type: git
