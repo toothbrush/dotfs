@@ -1,4 +1,7 @@
 <<dotfs
 foo = "bar";
+// the following is actually Pull Request #19's domain: thanks @mklinik!
+falsefoo = "falsefoo";
 >>
 <<var foo>>
+<<var falsefoo>>
