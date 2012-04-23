@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports -fforce-recomp -fth #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports -fforce-recomp -fth -fno-warn-orphans #-}
 module System.DotFS.Test.Unit where
 
 import System.DotFS.Test.Utility -- our TH functions
