@@ -1,0 +1,57 @@
+#!/bin/bash
+
+. /etc/rc.conf
+. /etc/conf.d/alsa
+. /etc/rc.d/functions
+
+. /etc/dotfs.conf
+
+daemon="dotfs"
+
+#name="DotsFS"
+#srcdir="/home/sjoerd/configs/dotfs-src"
+#mntdir="/home/sjoerd/configs/dotfs-mnt"
+#user="sjoerd"
+
+logfile="/var/log/dotfs.log"
+
+case "$1" in
+  start)
+    for i in ${!name[@]}
+    do
+        stat_busy "Starting DotFS for: ${name[i]}"
+        sudo -u ${user[i]} /usr/local/bin/dotfs ${mnt[i]} ${src[i]} &> $logfile
+        if [ $? -eq 0 ]; then
+          add_daemon ${daemon}-${name[i]}
+        else
+          stat_fail
+          exit 1
+        fi
+        stat_done
+    done
+    ;;
+  stop)
+    for i in ${!name[@]}
+    do
+        ck_daemon ${daemon}-${name[i]}
+        if [ $? -eq 1 ]; then
+            stat_busy "Stopping DotFS for: ${name[i]}"
+            sudo -u ${user[i]} /bin/fusermount -u ${mnt[i]}
+            if [ $? -eq 0 ]; then
+                stat_done
+                rm_daemon ${daemon}-${name[i]}
+            else
+                stat_fail
+                exit 1
+            fi
+	fi
+    done
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  *)
+    echo "usage: $0 {start|stop|restart}"
+esac
