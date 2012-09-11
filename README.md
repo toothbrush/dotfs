@@ -11,7 +11,7 @@ The use case is a user wanting automatic configuration adjustment in larger
 config files with shared sections. See the wiki for a quick guide, a users' guide,
 a specification of the grammar, and some examples.
 
-Note that if a file doesn't contain DotFS markup, it is passed through "vanilla" -- even binaries. This means that
+Note that if a file doesn't contain DotFS markup, it is passed through "vanilla" — this includes binaries. This means that
 you don't have to convert all your config files before starting with DotFS, but that you can annotate those which 
 currently pose an inconvenience, and leave all the others as they are.
 
