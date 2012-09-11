@@ -45,3 +45,10 @@ Usage
 See the [wiki entry on usage](https://github.com/toothbrush/dotfs/wiki/DotFS-Usage). Soon a short presentation will
 also be put online which will hopefully serve as both an elevator pitch and a short introduction to the features that
 are available. See [here](http://prezi.com/-acujvowpciq/dotfs/?auth_key=b5c3c371bc5e251ab6e1b3a1a705c4443bd434d9).
+
+Interesting pointers
+--------------------
+
+* Entry at the Dutch Haskell Day site: [here](http://www.haskell.org/haskellwiki/DHD_UHac/DHD_Program#dotfs)
+* We're online: [video of the lightning talk](https://vimeo.com/42304273)
+* There's a cabal package: [hackage](http://hackage.haskell.org/package/dotfs)
